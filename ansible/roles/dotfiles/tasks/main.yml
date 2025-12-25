@@ -280,7 +280,6 @@
       export AWS_PAGER=''
     dest: "{{ dotfiles_dir }}/zsh/.zshrc"
     mode: "0644"
-  when: not repo_zshrc_stat.stat.exists
   tags: config
 
 - name: Stat existing .zshrc
@@ -290,20 +289,45 @@
   register: zshrc_stat
   tags: config
 
-- name: Backup existing .zshrc to backup directory
+- name: Stat for migration check
+  ansible.builtin.stat:
+    path: "{{ ansible_env.HOME }}/.zshrc"
+    follow: false
+  register: home_zshrc_to_migrate
+  tags: config
+
+- name: Backup existing .zshrc to backup directory (if migrating)
   ansible.builtin.copy:
     src: "{{ ansible_env.HOME }}/.zshrc"
     dest: "{{ backup_dir }}/zshrc.{{ ansible_date_time.iso8601_basic_short }}"
     remote_src: true
     mode: preserve
-  when: zshrc_stat.stat.exists and not zshrc_stat.stat.islnk
+  when: 
+    - migrate_existing_dotfiles | default(false) | bool
+    - zshrc_stat.stat.exists 
+    - not zshrc_stat.stat.islnk
   tags: config
 
-- name: Remove old .zshrc before linking
+- name: Copy home .zshrc to repo (if migrating and exists)
+  ansible.builtin.copy:
+    src: "{{ ansible_env.HOME }}/.zshrc"
+    dest: "{{ dotfiles_dir }}/zsh/.zshrc"
+    remote_src: true
+    mode: "0644"
+  when:
+    - migrate_existing_dotfiles | default(false) | bool
+    - zshrc_stat.stat.exists
+    - not zshrc_stat.stat.islnk
+  tags: config
+
+- name: Remove old .zshrc before copying repo version (if migrating)
   ansible.builtin.file:
     path: "{{ ansible_env.HOME }}/.zshrc"
     state: absent
-  when: zshrc_stat.stat.exists and not zshrc_stat.stat.islnk
+  when: 
+    - migrate_existing_dotfiles | default(false) | bool
+    - zshrc_stat.stat.exists 
+    - not zshrc_stat.stat.islnk
   tags: config
 
 - name: Check if dotfiles zshrc exists after creation
@@ -312,13 +336,13 @@
   register: repo_zshrc_stat_final
   tags: config
 
-- name: Symlink .zshrc to repo version
-  ansible.builtin.file:
+- name: Copy .zshrc from repo to home (unless migrating from home)
+  ansible.builtin.copy:
     src: "{{ dotfiles_dir }}/zsh/.zshrc"
     dest: "{{ ansible_env.HOME }}/.zshrc"
-    state: link
-    force: true
-  when: repo_zshrc_stat_final.stat.exists
+    remote_src: true
+    mode: "0644"
+  when: repo_zshrc_stat_final.stat.exists and not (migrate_existing_dotfiles | default(false) | bool and home_zshrc_to_migrate.stat.exists)
   tags: config
 
 # Local overrides - NEVER overwrite if exists
