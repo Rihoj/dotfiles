@@ -302,3 +302,31 @@
     - chsh_result.failed | default(false)
     - zsh_path.stdout | length > 0
   tags: shell
+
+# Bin scripts linking
+- name: Ensure ~/.local/bin exists
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.local/bin"
+    state: directory
+    mode: "0755"
+  tags: bin
+
+- name: Link bin scripts to ~/.local/bin
+  ansible.builtin.file:
+    src: "{{ dotfiles_dir }}/bin/{{ item }}"
+    dest: "{{ ansible_env.HOME }}/.local/bin/{{ item }}"
+    state: link
+    force: true
+  loop:
+    - dotfiles-check-updates.sh
+    - dotfiles-pull-updates.sh
+    - dotfiles-link-bin.sh
+  when: dotfiles_dir is defined
+  tags: bin
+
+- name: Note on bin scripts
+  ansible.builtin.debug:
+    msg:
+      - "Update utilities linked to ~/.local/bin"
+      - "Ensure ~/.local/bin is in your PATH (typically automatic)"
+  tags: bin
