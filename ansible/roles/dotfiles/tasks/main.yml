@@ -8,6 +8,7 @@
       - zsh
       - less
       - vim
+      - fonts-powerline
   tags: packages
 
 - name: Check if sudo is available
@@ -89,6 +90,46 @@
     - item.rc != 0
   loop: "{{ critical_pkg_check.results }}"
   tags: packages
+
+# Font installation for Powerlevel10k
+- name: Install powerline-fonts via dnf (Fedora)
+  ansible.builtin.dnf:
+    name: powerline-fonts
+    state: present
+  when:
+    - install_deps | bool
+    - ansible_facts['os_family'] == 'RedHat'
+  become: true
+  register: dnf_font_result
+  failed_when: false
+  tags: fonts
+
+- name: Install powerline-fonts via pacman (Arch)
+  community.general.pacman:
+    name: powerline-fonts
+    state: present
+  when:
+    - install_deps | bool
+    - ansible_facts['os_family'] == 'Archlinux'
+  become: true
+  register: pacman_font_result
+  failed_when: false
+  tags: fonts
+
+- name: Notify about Powerlevel10k font requirements
+  ansible.builtin.debug:
+    msg: |
+      Powerlevel10k requires a Powerline or Nerd Font for proper rendering.
+      
+      Installed fonts-powerline package via package manager.
+      
+      After installation, configure your terminal to use one of these fonts:
+      - Recommended: A Nerd Font (https://www.nerdfonts.com/)
+      - Alternative: Powerline fonts (already installed)
+      
+      Popular Nerd Font choices: JetBrains Mono Nerd Font, FiraCode Nerd Font, Meslo Nerd Font
+  when: install_deps | bool
+  tags: fonts
 
 # Repository setup
 - name: Ensure dotfiles directory exists
