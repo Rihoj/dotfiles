@@ -230,12 +230,14 @@
       ansible.builtin.tempfile:
         state: file
       register: omz_tmp
+      check_mode: false
 
     - name: Download Oh My Zsh installer
       ansible.builtin.get_url:
         url: https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
         dest: "{{ omz_tmp.path }}"
         mode: "0700"
+      check_mode: false
 
     - name: Run Oh My Zsh installer non-interactively
       ansible.builtin.command: >-
@@ -248,7 +250,8 @@
       ansible.builtin.file:
         path: "{{ omz_tmp.path | default('') }}"
         state: absent
-      when: omz_tmp is defined
+      when: omz_tmp is defined and omz_tmp.path is defined
+      check_mode: false
   tags: omz
 
 # Shell change
