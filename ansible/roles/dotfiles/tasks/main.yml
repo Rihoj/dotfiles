@@ -272,7 +272,7 @@
 
 # Oh My Zsh installation
 - name: Check if zsh is available
-  ansible.builtin.command: command -v zsh
+  ansible.builtin.shell: command -v zsh
   register: zsh_available
   changed_when: false
   failed_when: false
