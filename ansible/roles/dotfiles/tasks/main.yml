@@ -18,14 +18,22 @@
   when: install_deps | bool
   tags: packages
 
-- name: Install prerequisites
+- name: Install prerequisites (attempt with package module)
   ansible.builtin.package:
     name: "{{ dotfiles_packages }}"
     state: present
+    update_cache: true
   when: install_deps | bool
   become: "{{ ansible_user_id != 'root' and sudo_check.rc == 0 }}"
   register: pkg_install_result
   failed_when: false
+  tags: packages
+
+- name: Show package installation result
+  ansible.builtin.debug:
+    var: pkg_install_result
+    verbosity: 1
+  when: install_deps | bool
   tags: packages
 
 - name: Warn if package installation failed
