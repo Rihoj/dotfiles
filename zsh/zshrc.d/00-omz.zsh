@@ -9,7 +9,6 @@ plugins=(
 	git
 	zsh-autosuggestions
 	zsh-syntax-highlighting 
-	F-Sy-H
 	aws
 )
 
