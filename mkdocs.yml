@@ -1,0 +1,45 @@
+site_name: Dotfiles Documentation
+site_description: Comprehensive documentation for Rihoj/dotfiles
+site_url: https://rihoj.github.io/dotfiles
+repo_url: https://github.com/Rihoj/dotfiles
+repo_name: Rihoj/dotfiles
+docs_dir: docs
+nav:
+  - Home: README.md
+  - Getting Started:
+      - Quick Start: getting-started.md
+  - Architecture:
+      - Overview: architecture.md
+      - Directory Structure: directory-structure.md
+      - Ownership Model: ownership-model.md
+  - User Guides:
+      - Configuration: configuration.md
+      - Zsh Configuration: zsh-configuration.md
+      - Update Management: updates.md
+  - Reference:
+      - Command Reference: command-reference.md
+      - FAQ: faq.md
+      - Troubleshooting: troubleshooting.md
+  - Summary: SUMMARY.md
+theme:
+  name: material
+  language: en
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - search.highlight
+    - search.suggest
+    - content.code.copy
+plugins:
+  - search
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true
+  - tables
+  - footnotes
+  - codehilite
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/Rihoj/dotfiles
