@@ -37,6 +37,25 @@
     - pkg_install_result.failed | default(false)
   tags: packages
 
+- name: Verify critical packages are installed
+  ansible.builtin.command: "command -v {{ item }}"
+  register: critical_pkg_check
+  changed_when: false
+  failed_when: false
+  loop:
+    - git
+    - zsh
+  tags: packages
+
+- name: Fail if critical packages are missing
+  ansible.builtin.fail:
+    msg: "CRITICAL: {{ item.item }} is not installed. Please install it manually: sudo apt-get install {{ item.item }}"
+  when:
+    - install_deps | bool
+    - item.rc != 0
+  loop: "{{ critical_pkg_check.results }}"
+  tags: packages
+
 # Repository setup
 - name: Ensure dotfiles directory exists
   ansible.builtin.file:
