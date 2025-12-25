@@ -18,21 +18,47 @@
   when: install_deps | bool
   tags: packages
 
-- name: Install prerequisites (attempt with package module)
-  ansible.builtin.package:
+- name: Install prerequisites via apt (Debian/Ubuntu)
+  ansible.builtin.apt:
     name: "{{ dotfiles_packages }}"
     state: present
     update_cache: true
-  when: install_deps | bool
-  become: "{{ ansible_user_id != 'root' and sudo_check.rc == 0 }}"
-  register: pkg_install_result
+    cache_valid_time: 3600
+  when:
+    - install_deps | bool
+    - ansible_facts['os_family'] == 'Debian'
+  become: true
+  register: apt_install_result
   failed_when: false
   tags: packages
 
-- name: Show package installation result
-  ansible.builtin.debug:
-    var: pkg_install_result
-    verbosity: 1
+- name: Install prerequisites via dnf (Fedora)
+  ansible.builtin.dnf:
+    name: "{{ dotfiles_packages }}"
+    state: present
+  when:
+    - install_deps | bool
+    - ansible_facts['os_family'] == 'RedHat'
+  become: true
+  register: dnf_install_result
+  failed_when: false
+  tags: packages
+
+- name: Install prerequisites via pacman (Arch)
+  community.general.pacman:
+    name: "{{ dotfiles_packages }}"
+    state: present
+  when:
+    - install_deps | bool
+    - ansible_facts['os_family'] == 'Archlinux'
+  become: true
+  register: pacman_install_result
+  failed_when: false
+  tags: packages
+
+- name: Set package install result
+  ansible.builtin.set_fact:
+    pkg_install_result: "{{ apt_install_result | default(dnf_install_result) | default(pacman_install_result) | default({}) }}"
   when: install_deps | bool
   tags: packages
 
