@@ -150,6 +150,10 @@ main() {
 
   install_ansible
 
+  # Build Ansible args robustly
+  local -a ANSIBLE_ARGS
+  ANSIBLE_ARGS=("-i" "localhost," "-c" "local")
+  
   local extra_vars=()
   if [[ -n "$DOTFILES_REPO" ]]; then
     extra_vars+=("dotfiles_repo=${DOTFILES_REPO}")
@@ -160,6 +164,8 @@ main() {
   if [[ $SET_DEFAULT_SHELL -eq 0 ]]; then
     extra_vars+=("set_default_shell=false")
   fi
+  # Expose migration flag opt-in via env or args later; default false
+  extra_vars+=("migrate_existing_dotfiles=${MIGRATE_EXISTING_DOTFILES:-false}")
 
   log "Running Ansible playbook"
   local check_flag=""
@@ -167,7 +173,18 @@ main() {
     check_flag="--check"
     log "DRY RUN MODE: No changes will be made"
   fi
-  ansible-playbook -i localhost, -c local ansible/playbook.yml $check_flag ${extra_vars:+-e "${extra_vars[*]}"}
+  # Append check flag and extra vars safely
+  [[ -n "$check_flag" ]] && ANSIBLE_ARGS+=("$check_flag")
+  if [[ ${#extra_vars[@]} -gt 0 ]]; then
+    # Pass each var separately to avoid quoting collapse
+    local -a EV_ARGS
+    for ev in "${extra_vars[@]}"; do
+      EV_ARGS+=("-e" "$ev")
+    done
+    ansible-playbook "${ANSIBLE_ARGS[@]}" ansible/playbook.yml "${EV_ARGS[@]}"
+  else
+    ansible-playbook "${ANSIBLE_ARGS[@]}" ansible/playbook.yml
+  fi
 }
 
 main "$@"

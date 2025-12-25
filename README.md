@@ -201,3 +201,45 @@ cp ~/.npmrc ~/.dotfiles/npm/.npmrc
 ## Legacy Scripts
 
 - `setup-dotfiles.sh`: Old bash-only bootstrap. **Deprecated.** Use `bootstrap.sh` instead.
+
+## Update Utilities
+
+These scripts help keep your dotfiles up to date across machines and make commands available globally.
+
+- **[bin/dotfiles-check-updates.sh](bin/dotfiles-check-updates.sh):** Auto-checks for repo updates on shell startup, every N days.
+    - Env: `ZSH_DOTFILES_UPDATE_FREQ` (default: 7)
+    - Loaded by [zsh/zshrc.d/05-dotfiles-updates.zsh](zsh/zshrc.d/05-dotfiles-updates.zsh)
+
+- **[bin/dotfiles-pull-updates.sh](bin/dotfiles-pull-updates.sh):** Manual updater.
+    - Check only: `dotfiles-pull-updates --check-only`
+    - Pull and notify reload: `dotfiles-pull-updates`
+    - Uses your upstream tracking branch (`@{u}`), not hardcoded origin/main
+
+- **[bin/dotfiles-link-bin.sh](bin/dotfiles-link-bin.sh):** Symlinks scripts in `bin/` to `~/.local/bin`.
+    - Run once: `~/.dotfiles/bin/dotfiles-link-bin.sh`
+    - Ensure PATH includes `~/.local/bin`:
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+### Behavior
+- Non-blocking: update checks run in the background during shell startup.
+- Safe defaults: does nothing if the repo isn’t a git clone.
+- Clear prompts: shows a short notice when updates are available.
+
+### Migration Mode (Optional)
+By default, provisioning will NOT copy existing home dotfiles into the repo.
+To explicitly migrate legacy dotfiles from `~` into this repo during provisioning, set:
+
+```bash
+MIGRATE_EXISTING_DOTFILES=true ./bootstrap.sh
+```
+
+Or pass via Ansible extra vars:
+
+```bash
+ansible-playbook -i localhost, -c local ansible/playbook.yml -e migrate_existing_dotfiles=true
+```
+
+This gates home→repo copy/backup/removal to avoid mutating a curated repo on subsequent runs.

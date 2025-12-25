@@ -17,12 +17,14 @@ cd "$DOTFILES_DIR"
 # Check for changes only
 if [[ "$1" == "--check-only" ]]; then
   echo "Checking for updates..."
-  git fetch origin main --quiet
+  git fetch --quiet
   
-  if git diff --quiet @{u}..HEAD 2>/dev/null; then
+  # Calculate behind/ahead relative to upstream
+  BEHIND=$(git rev-list --count HEAD..@{u} 2>/dev/null || echo 0)
+  AHEAD=$(git rev-list --count @{u}..HEAD 2>/dev/null || echo 0)
+  if [[ "$BEHIND" -eq 0 ]]; then
     echo "✅ You're up to date!"
   else
-    BEHIND=$(git rev-list --count @{u}..HEAD 2>/dev/null)
     echo "📦 $BEHIND commit(s) available to pull"
     echo "Run: dotfiles-pull-updates"
   fi
@@ -31,8 +33,8 @@ fi
 
 # Pull updates
 echo "🔄 Pulling dotfiles updates..."
-git fetch origin main
-git pull origin main
+git fetch --quiet || true
+git pull --ff-only
 
 echo "✅ Dotfiles updated successfully!"
 echo "💡 Reload your shell to apply changes: exec zsh"

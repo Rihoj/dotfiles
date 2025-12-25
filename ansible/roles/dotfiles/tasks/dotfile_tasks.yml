@@ -11,7 +11,10 @@
     dest: "{{ dotfiles_dir }}/{{ dotfile_dir }}/{{ dotfile_src }}"
     remote_src: true
     mode: preserve
-  when: home_dotfile_stat.stat.exists and not home_dotfile_stat.stat.islnk
+  when:
+    - migrate_existing_dotfiles | default(false) | bool
+    - home_dotfile_stat.stat.exists
+    - not home_dotfile_stat.stat.islnk
 
 - name: Backup existing {{ dotfile_name }} to backup directory
   ansible.builtin.copy:
@@ -19,13 +22,19 @@
     dest: "{{ backup_dir }}/{{ dotfile_name | regex_replace('^[.]', '') }}.{{ ansible_date_time.iso8601_basic_short }}"
     remote_src: true
     mode: preserve
-  when: home_dotfile_stat.stat.exists and not home_dotfile_stat.stat.islnk
+  when:
+    - migrate_existing_dotfiles | default(false) | bool
+    - home_dotfile_stat.stat.exists
+    - not home_dotfile_stat.stat.islnk
 
 - name: Remove old {{ dotfile_name }} before linking
   ansible.builtin.file:
     path: "{{ ansible_env.HOME }}/{{ dotfile_name }}"
     state: absent
-  when: home_dotfile_stat.stat.exists and not home_dotfile_stat.stat.islnk
+  when:
+    - migrate_existing_dotfiles | default(false) | bool
+    - home_dotfile_stat.stat.exists
+    - not home_dotfile_stat.stat.islnk
 
 - name: Check if repo version of {{ dotfile_name }} exists
   ansible.builtin.stat:

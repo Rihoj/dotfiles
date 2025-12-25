@@ -42,3 +42,7 @@ package-lock.json
 # Shell history (machine-specific)
 .zsh_history
 .bash_history
+
+# Dotfiles update state (runtime-only)
+.last_update_check
+.update.lock
