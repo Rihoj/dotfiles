@@ -1,0 +1,25 @@
+[init]
+	defaultBranch = main
+[user]
+	email = rihoj1@gmail.com
+	name = James Ray
+	signingkey = 71ACD1B2AE4DAB11
+[commit]
+	gpgsign = true
+[core]
+	editor = vim
+[alias]
+	co = switch
+[pull]
+	rebase = true
+[filter "lfs"]
+	required = true
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+[safe]
+	directory = /var/www/html
+	directory = /var/www/html
+[push]
+	autoSetupRemote = true
+	default = current

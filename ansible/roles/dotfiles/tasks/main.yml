@@ -1,0 +1,298 @@
+---
+# Package installation
+- name: Determine package list
+  ansible.builtin.set_fact:
+    dotfiles_packages:
+      - git
+      - curl
+      - zsh
+      - less
+      - vim
+  tags: packages
+
+- name: Check if sudo is available
+  ansible.builtin.command: command -v sudo
+  register: sudo_check
+  changed_when: false
+  failed_when: false
+  when: install_deps | bool
+  tags: packages
+
+- name: Install prerequisites
+  ansible.builtin.package:
+    name: "{{ dotfiles_packages }}"
+    state: present
+  when: install_deps | bool
+  become: "{{ ansible_user_id != 'root' and sudo_check.rc == 0 }}"
+  register: pkg_install_result
+  failed_when: false
+  tags: packages
+
+- name: Warn if package installation failed
+  ansible.builtin.debug:
+    msg: "WARNING: Package installation failed or was skipped. Required tools (git, curl, zsh) may be missing."
+  when:
+    - install_deps | bool
+    - pkg_install_result is defined
+    - pkg_install_result.failed | default(false)
+  tags: packages
+
+# Repository setup
+- name: Ensure dotfiles directory exists
+  ansible.builtin.file:
+    path: "{{ dotfiles_dir }}"
+    state: directory
+    mode: "0755"
+  tags: repo
+
+- name: Clone or update dotfiles repo when repo is provided
+  ansible.builtin.git:
+    repo: "{{ dotfiles_repo }}"
+    dest: "{{ dotfiles_dir }}"
+    version: HEAD
+    update: true
+  when: dotfiles_repo | length > 0
+  tags: repo
+
+- name: Warn if repo URL not provided
+  ansible.builtin.debug:
+    msg: "dotfiles_repo not set; expecting existing files in {{ dotfiles_dir }}"
+  when: dotfiles_repo | length == 0
+  tags: repo
+
+# Zshrc linking with backups
+- name: Ensure zsh directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - "{{ dotfiles_dir }}/zsh/zshrc.d"
+    - "{{ dotfiles_dir }}/zsh/omz-custom/plugins"
+    - "{{ dotfiles_dir }}/zsh/omz-custom/themes"
+  tags: config
+
+- name: Create initial .zshrc if missing
+  ansible.builtin.copy:
+    content: |
+      # ~/.zshrc (managed by ~/.dotfiles)
+      export DOTFILES_DIR="$HOME/.dotfiles"
+
+      # Oh My Zsh location (installed by install script)
+      export ZSH="$HOME/.oh-my-zsh"
+      export ZSH_CUSTOM="$DOTFILES_DIR/zsh/omz-custom"
+
+      # Prefer minimal, predictable behavior
+      setopt AUTO_CD
+      setopt HIST_IGNORE_ALL_DUPS
+      setopt SHARE_HISTORY
+      HISTSIZE=50000
+      SAVEHIST=50000
+      HISTFILE="$HOME/.zsh_history"
+
+      # Load modular config
+      for f in $DOTFILES_DIR/zsh/zshrc.d/*.zsh(N); do
+        [[ -r "$f" ]] && source "$f"
+      done
+
+      # Local per-machine overrides (not committed)
+      [[ -f "$HOME/.zshrc.local" ]] && source "$HOME/.zshrc.local"
+
+      # Load Oh My Zsh last (so it sees plugins/theme vars)
+      if [[ -r "$ZSH/oh-my-zsh.sh" ]]; then
+        source "$ZSH/oh-my-zsh.sh"
+      fi
+    dest: "{{ dotfiles_dir }}/zsh/.zshrc"
+    mode: "0644"
+  when: repo_zshrc_stat is not defined or not repo_zshrc_stat.stat.exists
+  tags: config
+
+- name: Stat existing .zshrc
+  ansible.builtin.stat:
+    path: "{{ ansible_env.HOME }}/.zshrc"
+    follow: false
+  register: zshrc_stat
+  tags: config
+
+- name: Backup existing .zshrc to backup directory
+  ansible.builtin.copy:
+    src: "{{ ansible_env.HOME }}/.zshrc"
+    dest: "{{ backup_dir }}/zshrc.{{ ansible_date_time.iso8601_basic_short }}"
+    remote_src: true
+    mode: preserve
+  when: zshrc_stat.stat.exists and not zshrc_stat.stat.islnk
+  tags: config
+
+- name: Remove old .zshrc before linking
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.zshrc"
+    state: absent
+  when: zshrc_stat.stat.exists and not zshrc_stat.stat.islnk
+  tags: config
+
+- name: Check if dotfiles zshrc exists after creation
+  ansible.builtin.stat:
+    path: "{{ dotfiles_dir }}/zsh/.zshrc"
+  register: repo_zshrc_stat_final
+  tags: config
+
+- name: Symlink .zshrc to repo version
+  ansible.builtin.file:
+    src: "{{ dotfiles_dir }}/zsh/.zshrc"
+    dest: "{{ ansible_env.HOME }}/.zshrc"
+    state: link
+    force: true
+  when: repo_zshrc_stat_final.stat.exists
+  tags: config
+
+# Local overrides - NEVER overwrite if exists
+- name: Stat .zshrc.local
+  ansible.builtin.stat:
+    path: "{{ ansible_env.HOME }}/.zshrc.local"
+  register: zshrc_local_stat
+  tags: config
+
+- name: Create .zshrc.local from template ONLY if missing
+  ansible.builtin.template:
+    src: zshrc.local.j2
+    dest: "{{ ansible_env.HOME }}/.zshrc.local"
+    mode: "0644"
+    force: false
+  when: not zshrc_local_stat.stat.exists
+  tags: config
+
+- name: Document that .zshrc.local is user-owned
+  ansible.builtin.debug:
+    msg:
+      - "~/.zshrc.local exists and is NEVER modified by this playbook"
+      - "This file is YOUR domain. Edit it directly for machine-specific config."
+  when: zshrc_local_stat.stat.exists
+  tags: config
+
+# Additional dotfiles management (git, vim, bash, npm, etc.)
+- name: Ensure additional config directories exist
+  ansible.builtin.file:
+    path: "{{ dotfiles_dir }}/{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - git
+    - vim
+    - shell
+    - npm
+  tags: config
+
+- name: Manage additional dotfiles (git, vim, bash, npm)
+  ansible.builtin.set_fact:
+    managed_dotfiles:
+      - { name: ".gitconfig", dir: "git", src_name: ".gitconfig" }
+      - { name: ".vimrc", dir: "vim", src_name: ".vimrc" }
+      - { name: ".bashrc", dir: "shell", src_name: ".bashrc" }
+      - { name: ".npmrc", dir: "npm", src_name: ".npmrc" }
+  tags: config
+
+- name: Stat home version of {{ dotfile.name }}
+  ansible.builtin.stat:
+    path: "{{ ansible_env.HOME }}/{{ dotfile.name }}"
+    follow: false
+  register: home_dotfile_stat
+  loop: "{{ managed_dotfiles }}"
+  loop_control:
+    loop_var: dotfile
+  tags: config
+
+- name: Process each managed dotfile
+  ansible.builtin.include_tasks:
+    file: dotfile_tasks.yml
+  vars:
+    dotfile_name: "{{ item.name }}"
+    dotfile_dir: "{{ item.dir }}"
+    dotfile_src: "{{ item.src_name }}"
+  loop: "{{ managed_dotfiles }}"
+  tags: config
+
+# Oh My Zsh installation
+- name: Stat Oh My Zsh directory
+  ansible.builtin.stat:
+    path: "{{ ansible_env.HOME }}/.oh-my-zsh"
+  register: omz_stat
+  tags: omz
+
+- name: Install Oh My Zsh when missing
+  block:
+    - name: Create temporary file for installer
+      ansible.builtin.tempfile:
+        state: file
+      register: omz_tmp
+
+    - name: Download Oh My Zsh installer
+      ansible.builtin.get_url:
+        url: https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
+        dest: "{{ omz_tmp.path }}"
+        mode: "0700"
+
+    - name: Run Oh My Zsh installer non-interactively
+      ansible.builtin.command: >-
+        env RUNZSH=no CHSH=no KEEP_ZSHRC=yes sh {{ omz_tmp.path }}
+      args:
+        creates: "{{ ansible_env.HOME }}/.oh-my-zsh"
+  when: not omz_stat.stat.exists
+  always:
+    - name: Remove temporary installer file
+      ansible.builtin.file:
+        path: "{{ omz_tmp.path | default('') }}"
+        state: absent
+      when: omz_tmp is defined
+  tags: omz
+
+# Shell change
+- name: Determine current shell (Linux)
+  ansible.builtin.command: "getent passwd {{ ansible_user_id }}"
+  register: passwd_entry_getent
+  changed_when: false
+  failed_when: false
+  when: ansible_system == 'Linux'
+  tags: shell
+
+- name: Determine current shell (fallback)
+  ansible.builtin.command: "dscl . -read /Users/{{ ansible_user_id }} UserShell"
+  register: passwd_entry_dscl
+  changed_when: false
+  failed_when: false
+  when: ansible_system == 'Darwin'
+  tags: shell
+
+- name: Set passwd entry fact
+  ansible.builtin.set_fact:
+    passwd_entry:
+      stdout: "{{ passwd_entry_getent.stdout | default(passwd_entry_dscl.stdout | default('')) }}"
+  tags: shell
+
+- name: Discover zsh path
+  ansible.builtin.command: "command -v zsh"
+  register: zsh_path
+  changed_when: false
+  failed_when: false
+  tags: shell
+
+- name: Set default shell to zsh
+  ansible.builtin.command: "chsh -s {{ zsh_path.stdout }} {{ ansible_user_id }}"
+  when:
+    - set_default_shell | bool
+    - passwd_entry.stdout is not regex('\\/zsh$')
+    - zsh_path.rc == 0
+    - zsh_path.stdout | length > 0
+  register: chsh_result
+  changed_when: chsh_result.rc == 0
+  failed_when: false
+  tags: shell
+
+- name: Warn if default shell change failed
+  ansible.builtin.debug:
+    msg: "Could not change default shell automatically. Run: chsh -s {{ zsh_path.stdout }}"
+  when:
+    - set_default_shell | bool
+    - chsh_result is defined
+    - chsh_result.failed | default(false)
+    - zsh_path.stdout | length > 0
+  tags: shell

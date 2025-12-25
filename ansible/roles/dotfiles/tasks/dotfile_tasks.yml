@@ -1,0 +1,48 @@
+---
+- name: Stat home version of {{ dotfile_name }}
+  ansible.builtin.stat:
+    path: "{{ ansible_env.HOME }}/{{ dotfile_name }}"
+    follow: false
+  register: home_dotfile_stat
+
+- name: Copy existing {{ dotfile_name }} to repo if it exists
+  ansible.builtin.copy:
+    src: "{{ ansible_env.HOME }}/{{ dotfile_name }}"
+    dest: "{{ dotfiles_dir }}/{{ dotfile_dir }}/{{ dotfile_src }}"
+    remote_src: true
+    mode: preserve
+  when: home_dotfile_stat.stat.exists and not home_dotfile_stat.stat.islnk
+
+- name: Backup existing {{ dotfile_name }} to backup directory
+  ansible.builtin.copy:
+    src: "{{ ansible_env.HOME }}/{{ dotfile_name }}"
+    dest: "{{ backup_dir }}/{{ dotfile_name | regex_replace('^[.]', '') }}.{{ ansible_date_time.iso8601_basic_short }}"
+    remote_src: true
+    mode: preserve
+  when: home_dotfile_stat.stat.exists and not home_dotfile_stat.stat.islnk
+
+- name: Remove old {{ dotfile_name }} before linking
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/{{ dotfile_name }}"
+    state: absent
+  when: home_dotfile_stat.stat.exists and not home_dotfile_stat.stat.islnk
+
+- name: Check if repo version of {{ dotfile_name }} exists
+  ansible.builtin.stat:
+    path: "{{ dotfiles_dir }}/{{ dotfile_dir }}/{{ dotfile_src }}"
+  register: repo_dotfile_stat
+
+- name: Symlink {{ dotfile_name }} to repo version
+  ansible.builtin.file:
+    src: "{{ dotfiles_dir }}/{{ dotfile_dir }}/{{ dotfile_src }}"
+    dest: "{{ ansible_env.HOME }}/{{ dotfile_name }}"
+    state: link
+    force: true
+  when: repo_dotfile_stat.stat.exists
+
+- name: Note on {{ dotfile_name }}
+  ansible.builtin.debug:
+    msg:
+      - "{{ dotfile_name }}: Symlinked to {{ dotfiles_dir }}/{{ dotfile_dir }}/{{ dotfile_src }}"
+      - "To manage it, edit: {{ dotfiles_dir }}/{{ dotfile_dir }}/{{ dotfile_src }} then git commit"
+  when: repo_dotfile_stat.stat.exists

@@ -1,0 +1,33 @@
+---
+- name: Provision dotfiles locally
+  hosts: localhost
+  connection: local
+  gather_facts: true
+
+  vars:
+    dotfiles_dir: "{{ ansible_env.HOME }}/.dotfiles"
+    dotfiles_repo: ""
+    install_deps: true
+    set_default_shell: true
+    backup_dir: "{{ ansible_env.HOME }}/.dotfiles-backups"
+
+  pre_tasks:
+    - name: Ensure backup directory exists
+      ansible.builtin.file:
+        path: "{{ backup_dir }}"
+        state: directory
+        mode: "0700"
+      tags: always
+
+  roles:
+    - dotfiles
+
+  post_tasks:
+    - name: Display next steps
+      ansible.builtin.debug:
+        msg:
+          - "Dotfiles provisioned successfully"
+          - "Backups stored in: {{ backup_dir }}"
+          - "To activate zsh: exec zsh"
+          - "Local overrides: ~/.zshrc.local (never overwritten)"
+      tags: always

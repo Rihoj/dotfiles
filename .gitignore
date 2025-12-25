@@ -1,0 +1,44 @@
+# Backups and temporary files
+.dotfiles-backups/
+*.backup
+*.bak
+*~
+.swp
+*.swp
+*.swo
+
+# Local machine-specific config (never commit)
+.zshrc.local
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+*.orig
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+.coverage
+
+# Node/npm
+node_modules/
+npm-debug.log
+package-lock.json
+
+# Ansible
+*.retry
+.ansible/
+
+# Vim/editor temps
+.*.swp
+.*.swo
+*~
+
+# Shell history (machine-specific)
+.zsh_history
+.bash_history
