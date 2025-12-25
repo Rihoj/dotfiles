@@ -218,10 +218,23 @@
   tags: config
 
 # Oh My Zsh installation
+- name: Check if zsh is available
+  ansible.builtin.command: command -v zsh
+  register: zsh_available
+  changed_when: false
+  failed_when: false
+  tags: omz
+
 - name: Stat Oh My Zsh directory
   ansible.builtin.stat:
     path: "{{ ansible_env.HOME }}/.oh-my-zsh"
   register: omz_stat
+  tags: omz
+
+- name: Warn if zsh not available for OMZ
+  ansible.builtin.debug:
+    msg: "WARNING: Zsh not found. Skipping Oh My Zsh installation. Install zsh first."
+  when: zsh_available.rc != 0
   tags: omz
 
 - name: Install Oh My Zsh when missing
@@ -244,7 +257,9 @@
         env RUNZSH=no CHSH=no KEEP_ZSHRC=yes sh {{ omz_tmp.path }}
       args:
         creates: "{{ ansible_env.HOME }}/.oh-my-zsh"
-  when: not omz_stat.stat.exists
+  when:
+    - not omz_stat.stat.exists
+    - zsh_available.rc == 0
   always:
     - name: Remove temporary installer file
       ansible.builtin.file:
