@@ -153,10 +153,12 @@
     dest: "{{ nerd_font_dir }}/{{ item.name }}"
     mode: "0644"
   loop: "{{ nerd_font_files }}"
+  loop_control:
+    index_var: font_index
   register: nerd_font_downloads
   when:
     - install_deps | bool
-    - not existing_fonts.results[ansible_loop.index0].stat.exists
+    - not existing_fonts.results[font_index].stat.exists
   tags: fonts
 
 - name: Refresh font cache when Nerd Fonts change
