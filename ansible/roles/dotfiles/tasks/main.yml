@@ -479,14 +479,62 @@
   failed_when: false
   tags: shell
 
-- name: Set default shell to zsh
-  ansible.builtin.command: "chsh -s {{ zsh_path.stdout }} {{ ansible_user_id }}"
+- name: Set default shell to zsh (with sudo if needed)
+  block:
+    - name: Try chsh without privilege escalation (local)
+      ansible.builtin.command: "chsh -s {{ zsh_path.stdout }}"
+      register: chsh_result
+      changed_when: false
+      failed_when: false
+      when:
+        - set_default_shell | bool
+        - passwd_entry.stdout is not regex('zsh$')
+        - zsh_path.rc == 0
+        - zsh_path.stdout | length > 0
+        - ansible_connection | default('') == 'local'
+
+    - name: Try chsh with sudo (remote systems)
+      ansible.builtin.command: "sudo chsh -s {{ zsh_path.stdout }} {{ ansible_user_id }}"
+      register: chsh_result
+      changed_when: false
+      failed_when: false
+      when:
+        - set_default_shell | bool
+        - passwd_entry.stdout is not regex('zsh$')
+        - zsh_path.rc == 0
+        - zsh_path.stdout | length > 0
+        - ansible_connection | default('') != 'local'
+
+  rescue:
+    - name: Report chsh failure
+      ansible.builtin.debug:
+        msg: "WARNING: Could not change default shell to zsh. Run manually: chsh -s {{ zsh_path.stdout }}"
+  tags: shell
+
+- name: Verify shell change
+  ansible.builtin.command: "getent passwd {{ ansible_user_id }}"
+  register: passwd_entry_verify
+  changed_when: false
+  failed_when: false
   when:
     - set_default_shell | bool
-    - passwd_entry.stdout is not regex('zsh$')
-    - zsh_path.rc == 0
-    - zsh_path.stdout | length > 0
-  register: chsh_result
+    - ansible_system == 'Linux'
+  tags: shell
+
+- name: Report shell status
+  ansible.builtin.debug:
+    msg: |
+      Default shell configuration:
+      {% if passwd_entry_verify.stdout is regex('zsh$') %}
+      ✓ Shell successfully set to zsh
+      {% else %}
+      ⚠ Shell is still: {{ passwd_entry_verify.stdout.split(':')[-1] | default('unknown') }}
+      Run: chsh -s {{ zsh_path.stdout }}
+      {% endif %}
+  when:
+    - set_default_shell | bool
+    - passwd_entry_verify is defined
+  tags: shell
   changed_when: chsh_result.rc == 0
   failed_when: false
   tags: shell
