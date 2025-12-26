@@ -535,9 +535,6 @@
     - set_default_shell | bool
     - passwd_entry_verify is defined
   tags: shell
-  changed_when: chsh_result.rc == 0
-  failed_when: false
-  tags: shell
 
 - name: Warn if default shell change failed
   ansible.builtin.debug:
