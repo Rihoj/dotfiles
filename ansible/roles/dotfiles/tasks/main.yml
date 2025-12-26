@@ -139,6 +139,14 @@
   when: install_deps | bool
   tags: fonts
 
+- name: Check which Nerd Fonts already exist
+  ansible.builtin.stat:
+    path: "{{ nerd_font_dir }}/{{ item.name }}"
+  loop: "{{ nerd_font_files }}"
+  register: existing_fonts
+  when: install_deps | bool
+  tags: fonts
+
 - name: Download Meslo Nerd Font (per-user)
   ansible.builtin.get_url:
     url: "{{ item.url }}"
@@ -146,7 +154,9 @@
     mode: "0644"
   loop: "{{ nerd_font_files }}"
   register: nerd_font_downloads
-  when: install_deps | bool
+  when:
+    - install_deps | bool
+    - not existing_fonts.results[ansible_loop.index0].stat.exists
   tags: fonts
 
 - name: Refresh font cache when Nerd Fonts change
