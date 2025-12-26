@@ -116,6 +116,48 @@
   failed_when: false
   tags: fonts
 
+- name: Define Nerd Font download targets
+  ansible.builtin.set_fact:
+    nerd_font_dir: "{{ ansible_env.HOME }}/.local/share/fonts/MesloLGS-NF"
+    nerd_font_files:
+      - name: "MesloLGS NF Regular.ttf"
+        url: "https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Regular.ttf"
+      - name: "MesloLGS NF Bold.ttf"
+        url: "https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Bold.ttf"
+      - name: "MesloLGS NF Italic.ttf"
+        url: "https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Italic.ttf"
+      - name: "MesloLGS NF Bold Italic.ttf"
+        url: "https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Bold%20Italic.ttf"
+  when: install_deps | bool
+  tags: fonts
+
+- name: Ensure Nerd Font directory exists
+  ansible.builtin.file:
+    path: "{{ nerd_font_dir }}"
+    state: directory
+    mode: "0755"
+  when: install_deps | bool
+  tags: fonts
+
+- name: Download Meslo Nerd Font (per-user)
+  ansible.builtin.get_url:
+    url: "{{ item.url }}"
+    dest: "{{ nerd_font_dir }}/{{ item.name }}"
+    mode: "0644"
+  loop: "{{ nerd_font_files }}"
+  register: nerd_font_downloads
+  when: install_deps | bool
+  tags: fonts
+
+- name: Refresh font cache when Nerd Fonts change
+  ansible.builtin.command: fc-cache -f "{{ nerd_font_dir }}"
+  changed_when: true
+  when:
+    - install_deps | bool
+    - nerd_font_downloads is defined
+    - nerd_font_downloads.results | selectattr('changed', 'equalto', true) | list | length > 0
+  tags: fonts
+
 - name: Notify about Powerlevel10k font requirements
   ansible.builtin.debug:
     msg: |
