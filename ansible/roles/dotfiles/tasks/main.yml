@@ -496,7 +496,7 @@
     name: "{{ ansible_user_id }}"
     shell: "{{ zsh_path.stdout }}"
   register: user_shell_change
-  become: false
+  become: true
   when:
     - set_default_shell | bool
     - passwd_entry.stdout is not regex('zsh$')
