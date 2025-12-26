@@ -489,36 +489,17 @@
   failed_when: false
   tags: shell
 
-- name: Set default shell to zsh (with sudo if needed)
-  block:
-    - name: Try chsh without privilege escalation (local)
-      ansible.builtin.command: "chsh -s {{ zsh_path.stdout }}"
-      register: chsh_result
-      changed_when: false
-      failed_when: false
-      when:
-        - set_default_shell | bool
-        - passwd_entry.stdout is not regex('zsh$')
-        - zsh_path.rc == 0
-        - zsh_path.stdout | length > 0
-        - ansible_connection | default('') == 'local'
-
-    - name: Try chsh with sudo (remote systems)
-      ansible.builtin.command: "sudo chsh -s {{ zsh_path.stdout }} {{ ansible_user_id }}"
-      register: chsh_result
-      changed_when: false
-      failed_when: false
-      when:
-        - set_default_shell | bool
-        - passwd_entry.stdout is not regex('zsh$')
-        - zsh_path.rc == 0
-        - zsh_path.stdout | length > 0
-        - ansible_connection | default('') != 'local'
-
-  rescue:
-    - name: Report chsh failure
-      ansible.builtin.debug:
-        msg: "WARNING: Could not change default shell to zsh. Run manually: chsh -s {{ zsh_path.stdout }}"
+- name: Set default shell to zsh (using ansible.builtin.user)
+  ansible.builtin.user:
+    name: "{{ ansible_user_id }}"
+    shell: "{{ zsh_path.stdout }}"
+  register: user_shell_change
+  become: "{{ ansible_connection != 'local' }}"
+  when:
+    - set_default_shell | bool
+    - passwd_entry.stdout is not regex('zsh$')
+    - zsh_path.rc == 0
+    - zsh_path.stdout | length > 0
   tags: shell
 
 - name: Verify shell change
