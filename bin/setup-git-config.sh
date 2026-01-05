@@ -78,6 +78,8 @@ generate_gpg_key() {
     return 1
   fi
   
+  # Note: Using %no-protection to avoid passphrase prompt in non-interactive context
+  # Users can add a passphrase later with: gpg --edit-key <KEY_ID> passwd
   cat > "$batch_file" <<EOF
 %no-protection
 Key-Type: eddsa
@@ -90,6 +92,9 @@ Name-Real: $name
 Name-Email: $email
 Expire-Date: 0
 EOF
+  
+  log "Note: Key will be created without passphrase protection" >&2
+  log "You can add a passphrase later with: gpg --edit-key <KEY_ID> passwd" >&2
   
   if $gpg_cmd --batch --generate-key "$batch_file" 2>&1 >&2; then
     log "GPG key generated successfully" >&2
@@ -148,14 +153,26 @@ main() {
   local user_email
   
   user_name=$(prompt "Full name" "$current_name")
-  while [[ -z "$user_name" ]]; do
-    error "Name cannot be empty"
+  # Validate name: not empty, no newlines, no special git config characters
+  while [[ -z "$user_name" ]] || [[ "$user_name" =~ [$'\n'$'\r'[=\]] ]]; do
+    if [[ -z "$user_name" ]]; then
+      error "Name cannot be empty"
+    else
+      error "Name contains invalid characters (newlines, brackets, or equals signs)"
+    fi
     user_name=$(prompt "Full name" "$current_name")
   done
   
   user_email=$(prompt "Email address" "$current_email")
-  while [[ -z "$user_email" ]]; do
-    error "Email cannot be empty"
+  # Validate email: not empty, no newlines, no special git config characters, basic email format
+  while [[ -z "$user_email" ]] || [[ "$user_email" =~ [$'\n'$'\r'[=\]] ]] || [[ ! "$user_email" =~ ^[^@]+@[^@]+\.[^@]+$ ]]; do
+    if [[ -z "$user_email" ]]; then
+      error "Email cannot be empty"
+    elif [[ "$user_email" =~ [$'\n'$'\r'[=\]] ]]; then
+      error "Email contains invalid characters (newlines, brackets, or equals signs)"
+    else
+      error "Email format appears invalid (should be user@domain.tld)"
+    fi
     user_email=$(prompt "Email address" "$current_email")
   done
   
