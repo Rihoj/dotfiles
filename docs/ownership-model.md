@@ -169,10 +169,11 @@ Repo owns:          You own:
 ```
 Repo owns:          You own:
   │                   │
-  ├─ .gitconfig       └─ Machine-specific
-  │  (general)           git settings in
-  │                      ~/.gitconfig.local
-  └─ Aliases             (if you create it)
+  ├─ .gitconfig       └─ .gitconfig.local
+  │  (global)            (user identity)
+  │  - aliases           - name
+  │  - settings          - email
+  │  - includes          - GPG key
 ```
 
 **Pattern**:
@@ -181,11 +182,14 @@ Repo owns:          You own:
 [include]
     path = ~/.gitconfig.local  # User's local file
 
-# You create: ~/.gitconfig.local
+# Created by setup-git-config.sh: ~/.gitconfig.local
 [user]
+    name = Your Name
     email = work@example.com  # Work machine
-    # Or: personal@example.com on personal machine
+    signingkey = YOUR_GPG_KEY  # Optional
 ```
+
+**Setup**: Run `~/.dotfiles/bin/setup-git-config.sh` to interactively configure your git identity.
 
 ---
 
@@ -325,28 +329,46 @@ export EDITOR='nvim'  # Neovim
 
 ### Example 3: Git User Configuration
 
-**Option 1**: Separate by machine
+**Setup**: Run the interactive configuration script:
 ```bash
-# In repo: git/.gitconfig (no user section)
-[core]
-    editor = vim
-[alias]
-    st = status
+~/.dotfiles/bin/setup-git-config.sh
+```
 
-# On work machine: ~/.gitconfig.local
+This creates `~/.gitconfig.local` with your settings:
+
+**On work machine** (`~/.gitconfig.local`):
+```ini
 [user]
     name = Your Name
     email = work@company.com
+    signingkey = WORK_GPG_KEY
+```
 
-# On personal machine: ~/.gitconfig.local
+**On personal machine** (`~/.gitconfig.local`):
+```ini
 [user]
     name = Your Name
     email = personal@gmail.com
+    signingkey = PERSONAL_GPG_KEY
 ```
 
-**Option 2**: Conditional includes (in repo)
-```bash
+The repo's `git/.gitconfig` automatically includes your local config:
+```ini
 # In repo: git/.gitconfig
+[include]
+    path = ~/.gitconfig.local
+
+[commit]
+    gpgsign = true  # Repo enables signing
+
+[alias]
+    co = switch
+    # ... other aliases
+```
+
+**Advanced**: Conditional includes for different directories
+```bash
+# In ~/.gitconfig.local (your file, not in repo)
 [includeIf "gitdir:~/work/"]
     path = ~/.gitconfig-work
 [includeIf "gitdir:~/personal/"]

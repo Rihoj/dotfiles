@@ -30,6 +30,21 @@ The bootstrap script:
 
 ## Next Steps
 
+### Configure Git User Identity
+
+**Important**: Set up your git identity (name, email, GPG key):
+```bash
+# Run the interactive setup
+~/.dotfiles/bin/setup-git-config.sh
+```
+
+This will:
+- Prompt for your name and email
+- List available GPG keys or offer to generate a new one
+- Create `~/.gitconfig.local` with your settings
+
+**Why?** Your git identity is not stored in the repository to keep sensitive information private.
+
 ### Add Your Custom Configuration
 
 **For machine-specific settings** (not tracked in git):

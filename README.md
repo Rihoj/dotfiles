@@ -20,6 +20,9 @@ cd ~/.dotfiles
 
 # Run the bootstrap (installs Ansible if needed, then provisions)
 ./bootstrap.sh
+
+# Configure your git identity (name, email, GPG key)
+./bin/setup-git-config.sh
 ```
 
 That's it. Everything else is optional flags.
@@ -38,6 +41,8 @@ That's it. Everything else is optional flags.
 - **Repo files**: All files in this repo are the canonical source of truth
 - **~/.zshrc**: Symlinked to repo. Overwritten on every run.
 - **~/.zshrc.local**: Created once from template. NEVER touched again. This is YOUR file.
+- **~/.gitconfig**: Symlinked to repo. Contains global git settings.
+- **~/.gitconfig.local**: Created by setup script. NEVER touched again. Contains your git identity.
 
 ## Platform Support
 
@@ -52,8 +57,9 @@ Requirements:
 
 ## Ownership Contract
 
-- **Repo owns**: .zshrc, all zsh modules, aliases, environment setup
+- **Repo owns**: .zshrc, all zsh modules, aliases, environment setup, .gitconfig (global git settings)
 - **You own**: ~/.zshrc.local for machine-specific config, secrets, local paths
+- **You own**: ~/.gitconfig.local for your git identity (name, email, GPG key)
 
 ## Safety Features
 
