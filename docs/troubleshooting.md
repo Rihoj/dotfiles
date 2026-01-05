@@ -146,6 +146,29 @@ sudo pacman -S git curl zsh vim
 
 ---
 
+### "sudo: a password is required" During Ansible Playbook
+
+**Symptom**: Bootstrap runs successfully but Ansible fails with:
+```
+[ERROR]: Task failed: Premature end of stream waiting for become success.
+>>> Standard Error
+sudo: a password is required
+```
+
+**Cause**: Ansible needs sudo privileges to install packages, but the bootstrap script doesn't prompt for the sudo password.
+
+**Solution**: The bootstrap script will automatically prompt for the sudo password when needed. When you run `./bootstrap.sh`, Ansible will ask you to enter your sudo password when it needs elevated privileges for package installation.
+
+If the password prompt doesn't appear or you want to skip package installation:
+```bash
+# Skip package installation (if packages are already installed)
+./bootstrap.sh --no-install-deps
+```
+
+**Note**: As of the latest version, `bootstrap.sh` automatically adds the `--ask-become-pass` flag to Ansible when `install_deps` is enabled, ensuring you're prompted for your password when needed.
+
+---
+
 ### Can't Clone Repository
 
 **Symptom**: `fatal: could not read Username` or `Permission denied (publickey)`
