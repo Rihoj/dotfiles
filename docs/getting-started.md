@@ -101,9 +101,9 @@ chmod +x ~/.dotfiles/bootstrap.sh
 ```
 
 ### Sudo Password Required
-The bootstrap needs sudo to install packages. You'll be prompted to enter your sudo password when Ansible needs elevated privileges (typically during package installation). If you don't want to install packages, you can skip this with:
+The bootstrap needs sudo both to install packages and to change your default shell. You'll be prompted to enter your sudo password when Ansible needs elevated privileges (typically during package installation or when running `chsh`). If you don't want to install packages or change your default shell, you can skip these steps with:
 ```bash
-./bootstrap.sh --no-install-deps
+./bootstrap.sh --no-install-deps --no-chsh
 ```
 
 ### Zsh Not Activating

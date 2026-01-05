@@ -155,17 +155,23 @@ sudo pacman -S git curl zsh vim
 sudo: a password is required
 ```
 
-**Cause**: Ansible needs sudo privileges to install packages, but the bootstrap script doesn't prompt for the sudo password.
+**Cause**: This error occurs when Ansible needs sudo privileges (for package installation or changing the default shell) but no sudo password prompt is shown. This can happen with older versions of the bootstrap script or when running Ansible directly without `--ask-become-pass`.
 
-**Solution**: The bootstrap script will automatically prompt for the sudo password when needed. When you run `./bootstrap.sh`, Ansible will ask you to enter your sudo password when it needs elevated privileges for package installation.
+**Solution**: The bootstrap script will automatically prompt for the sudo password when needed. When you run `./bootstrap.sh`, Ansible will ask you to enter your sudo password when it needs elevated privileges for package installation or when changing your default shell.
 
-If the password prompt doesn't appear or you want to skip package installation:
+If you want to skip operations that require sudo:
 ```bash
-# Skip package installation (if packages are already installed)
+# Skip package installation and shell change
+./bootstrap.sh --no-install-deps --no-chsh
+
+# Skip only package installation
 ./bootstrap.sh --no-install-deps
+
+# Skip only shell change
+./bootstrap.sh --no-chsh
 ```
 
-**Note**: As of the latest version, `bootstrap.sh` automatically adds the `--ask-become-pass` flag to Ansible when `install_deps` is enabled, ensuring you're prompted for your password when needed.
+**Note**: As of the latest version, `bootstrap.sh` automatically adds the `--ask-become-pass` flag to Ansible when either `install_deps` or `set_default_shell` is enabled, ensuring you're prompted for your password when needed.
 
 ---
 
