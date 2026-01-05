@@ -86,15 +86,18 @@ EOF
     rm -f "$batch_file"
     log "GPG key generated successfully" >&2
     
-    # Get the newly generated key ID
+    # Get the newly generated key ID (prefer primary key, but accept subkey)
     local key_id
     key_id=$($gpg_cmd --list-secret-keys --keyid-format=long "$email" 2>/dev/null | \
-      grep -oP '(?<=sec)\s+[a-z0-9]+/\K[A-F0-9]{16}' | head -n1)
+      grep -oP '(?<=sec|ssb)\s+[a-z0-9]+/\K[A-F0-9]{16}' | head -n1)
     
     if [[ -n "$key_id" ]]; then
       log "Key ID: $key_id" >&2
       echo "$key_id"
       return 0
+    else
+      error "Failed to extract key ID from generated key" >&2
+      return 1
     fi
   else
     rm -f "$batch_file"
