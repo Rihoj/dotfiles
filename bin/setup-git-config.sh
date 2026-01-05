@@ -60,7 +60,7 @@ generate_gpg_key() {
   local name="$1"
   local email="$2"
   
-  log "Generating new GPG key (ed25519)..."
+  log "Generating new GPG key (ed25519)..." >&2
   
   local gpg_cmd="gpg"
   command -v gpg2 >/dev/null 2>&1 && gpg_cmd="gpg2"
@@ -82,9 +82,9 @@ Name-Email: $email
 Expire-Date: 0
 EOF
   
-  if $gpg_cmd --batch --generate-key "$batch_file" 2>&1; then
+  if $gpg_cmd --batch --generate-key "$batch_file" >&2 2>&1; then
     rm -f "$batch_file"
-    log "GPG key generated successfully"
+    log "GPG key generated successfully" >&2
     
     # Get the newly generated key ID
     local key_id
@@ -92,13 +92,13 @@ EOF
       grep -oP '(?<=sec)\s+[a-z0-9]+/\K[A-F0-9]{16}' | head -n1)
     
     if [[ -n "$key_id" ]]; then
-      log "Key ID: $key_id"
+      log "Key ID: $key_id" >&2
       echo "$key_id"
       return 0
     fi
   else
     rm -f "$batch_file"
-    error "Failed to generate GPG key"
+    error "Failed to generate GPG key" >&2
     return 1
   fi
 }
