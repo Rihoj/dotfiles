@@ -69,6 +69,15 @@ generate_gpg_key() {
   local batch_file
   batch_file=$(mktemp)
   
+  # Ensure cleanup on exit
+  trap 'rm -f "$batch_file"' RETURN
+  
+  # Validate inputs don't contain newlines or other problematic characters
+  if [[ "$name" =~ $'\n' ]] || [[ "$email" =~ $'\n' ]]; then
+    error "Name and email cannot contain newlines" >&2
+    return 1
+  fi
+  
   cat > "$batch_file" <<EOF
 %no-protection
 Key-Type: eddsa
@@ -82,8 +91,7 @@ Name-Email: $email
 Expire-Date: 0
 EOF
   
-  if $gpg_cmd --batch --generate-key "$batch_file" >&2 2>&1; then
-    rm -f "$batch_file"
+  if $gpg_cmd --batch --generate-key "$batch_file" 2>&1 >&2; then
     log "GPG key generated successfully" >&2
     
     # Get the newly generated key ID (prefer primary key, but accept subkey)
@@ -100,7 +108,6 @@ EOF
       return 1
     fi
   else
-    rm -f "$batch_file"
     error "Failed to generate GPG key" >&2
     return 1
   fi
