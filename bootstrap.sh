@@ -183,8 +183,8 @@ main() {
   fi
   # Append check flag and extra vars safely
   [[ -n "$check_flag" ]] && ANSIBLE_ARGS+=("$check_flag")
-  # Add --ask-become-pass if install_deps is enabled (requires sudo)
-  if [[ $INSTALL_DEPS -eq 1 ]]; then
+  # Add --ask-become-pass if any privileged operation is enabled (requires sudo)
+  if [[ $INSTALL_DEPS -eq 1 || $SET_DEFAULT_SHELL -eq 1 ]]; then
     ANSIBLE_ARGS+=("--ask-become-pass")
   fi
   if [[ ${#extra_vars[@]} -gt 0 ]]; then
