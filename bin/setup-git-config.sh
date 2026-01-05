@@ -118,6 +118,12 @@ EOF
   fi
 }
 
+validate_git_config_value() {
+  local value="$1"
+  # Check for characters that would break git config INI format
+  [[ "$value" =~ [$'\n'$'\r'[=\]] ]]
+}
+
 main() {
   log "Git User Configuration Setup"
   echo ""
@@ -153,8 +159,8 @@ main() {
   local user_email
   
   user_name=$(prompt "Full name" "$current_name")
-  # Validate name: not empty, no newlines, no special git config characters
-  while [[ -z "$user_name" ]] || [[ "$user_name" =~ [$'\n'$'\r'[=\]] ]]; do
+  # Validate name: not empty, no special git config characters
+  while [[ -z "$user_name" ]] || validate_git_config_value "$user_name"; do
     if [[ -z "$user_name" ]]; then
       error "Name cannot be empty"
     else
@@ -164,14 +170,15 @@ main() {
   done
   
   user_email=$(prompt "Email address" "$current_email")
-  # Validate email: not empty, no newlines, no special git config characters, basic email format
-  while [[ -z "$user_email" ]] || [[ "$user_email" =~ [$'\n'$'\r'[=\]] ]] || [[ ! "$user_email" =~ ^[^@]+@[^@]+\.[^@]+$ ]]; do
+  # Validate email: not empty, no special git config characters, basic email format
+  # Note: This is a simple validation. More complex emails with quoted strings, etc. may be rejected.
+  while [[ -z "$user_email" ]] || validate_git_config_value "$user_email" || [[ ! "$user_email" =~ ^[^@]+@[^@]+$ ]]; do
     if [[ -z "$user_email" ]]; then
       error "Email cannot be empty"
-    elif [[ "$user_email" =~ [$'\n'$'\r'[=\]] ]]; then
+    elif validate_git_config_value "$user_email"; then
       error "Email contains invalid characters (newlines, brackets, or equals signs)"
     else
-      error "Email format appears invalid (should be user@domain.tld)"
+      error "Email format appears invalid (should contain @ and domain)"
     fi
     user_email=$(prompt "Email address" "$current_email")
   done
