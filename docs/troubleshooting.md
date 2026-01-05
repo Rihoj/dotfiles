@@ -50,14 +50,23 @@ chmod +x ~/.dotfiles/bootstrap.sh
 
 ```bash
 # Manual Ansible installation
-# Debian/Ubuntu
+# Debian/Ubuntu (preferred - uses pipx to avoid PEP 668 issues)
+sudo apt-get update
+sudo apt-get install -y python3 python3-pip python3-venv pipx
+pipx install --include-deps ansible
+
+# Debian/Ubuntu (fallback - if pipx unavailable)
 sudo apt-get update
 sudo apt-get install -y python3 python3-pip python3-venv
-python3 -m pip install --user ansible
+python3 -m pip install --user --break-system-packages ansible
 
-# Fedora
+# Fedora (preferred - uses pipx)
+sudo dnf install -y python3 python3-pip pipx
+pipx install --include-deps ansible
+
+# Fedora (fallback)
 sudo dnf install -y python3 python3-pip
-python3 -m pip install --user ansible
+python3 -m pip install --user --break-system-packages ansible
 
 # macOS
 brew install ansible
@@ -66,6 +75,48 @@ brew install ansible
 Then re-run bootstrap:
 ```bash
 ./bootstrap.sh
+```
+
+---
+
+### Python "externally-managed-environment" Error
+
+**Symptom**: `pip install` fails with error about externally-managed environment (PEP 668)
+
+```
+error: externally-managed-environment
+
+× This environment is externally managed
+╰─> To install Python packages system-wide, try apt install
+    python3-xyz, where xyz is the package you are trying to
+    install.
+```
+
+**Cause**: Modern Python installations (Python 3.12+) on Debian/Ubuntu prevent `pip install --user` to protect system packages.
+
+**Solution 1**: Use `pipx` (recommended - automatically handled by bootstrap)
+```bash
+# Install pipx
+sudo apt-get install -y pipx
+
+# Then bootstrap will use pipx automatically
+./bootstrap.sh
+```
+
+**Solution 2**: Bootstrap already handles this
+The `bootstrap.sh` script automatically:
+1. Tries to install and use `pipx` if available
+2. Falls back to `pip install --user --break-system-packages` if pipx is unavailable
+
+Simply re-run bootstrap:
+```bash
+./bootstrap.sh
+```
+
+**Solution 3**: Manual installation with pipx
+```bash
+sudo apt-get install -y pipx
+pipx install --include-deps ansible
 ```
 
 ---

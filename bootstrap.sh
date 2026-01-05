@@ -104,15 +104,21 @@ install_packages() {
     apt)
       "${SUDO[@]}" apt-get update -y
       "${SUDO[@]}" apt-get install -y "${pkgs[@]}"
+      # Try to install pipx to avoid --break-system-packages
+      "${SUDO[@]}" apt-get install -y pipx 2>/dev/null || true
       ;;
     dnf)
       "${SUDO[@]}" dnf install -y "${pkgs[@]}"
+      # Try to install pipx to avoid --break-system-packages
+      "${SUDO[@]}" dnf install -y pipx 2>/dev/null || true
       ;;
     yum)
       "${SUDO[@]}" yum install -y "${pkgs[@]}"
       ;;
     pacman)
       "${SUDO[@]}" pacman -Syu --noconfirm "${pkgs[@]}"
+      # Try to install pipx to avoid --break-system-packages
+      "${SUDO[@]}" pacman -S --noconfirm python-pipx 2>/dev/null || true
       ;;
     zypper)
       "${SUDO[@]}" zypper install -y "${pkgs[@]}"
@@ -130,7 +136,10 @@ install_ansible() {
   if command -v pipx >/dev/null 2>&1; then
     pipx install --include-deps ansible
   else
-    python3 -m pip install --user --upgrade ansible
+    # PEP 668: externally-managed environments may block pip install --user
+    # Use --break-system-packages as fallback when pipx is unavailable
+    warn "pipx not found; falling back to pip install --user --break-system-packages"
+    python3 -m pip install --user --upgrade --break-system-packages ansible
     export PATH="$HOME/.local/bin:$PATH"
   fi
 }
