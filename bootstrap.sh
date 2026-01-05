@@ -103,16 +103,20 @@ install_packages() {
   case "$pkg_mgr" in
     apt)
       "${SUDO[@]}" apt-get update -y
-      "${SUDO[@]}" apt-get install -y "${pkgs[@]}"
+      # Try to install pipx as preferred solution for PEP 668 environments
+      "${SUDO[@]}" apt-get install -y "${pkgs[@]}" pipx 2>/dev/null || "${SUDO[@]}" apt-get install -y "${pkgs[@]}"
       ;;
     dnf)
-      "${SUDO[@]}" dnf install -y "${pkgs[@]}"
+      # Try to install pipx as preferred solution for PEP 668 environments
+      "${SUDO[@]}" dnf install -y "${pkgs[@]}" pipx 2>/dev/null || "${SUDO[@]}" dnf install -y "${pkgs[@]}"
       ;;
     yum)
       "${SUDO[@]}" yum install -y "${pkgs[@]}"
       ;;
     pacman)
       "${SUDO[@]}" pacman -Syu --noconfirm "${pkgs[@]}"
+      # Try to install pipx as preferred solution for PEP 668 environments
+      "${SUDO[@]}" pacman -S --noconfirm python-pipx 2>/dev/null || true
       ;;
     zypper)
       "${SUDO[@]}" zypper install -y "${pkgs[@]}"
@@ -130,7 +134,10 @@ install_ansible() {
   if command -v pipx >/dev/null 2>&1; then
     pipx install --include-deps ansible
   else
-    python3 -m pip install --user --upgrade ansible
+    # PEP 668: externally-managed environments may block pip install --user
+    # Use --break-system-packages as fallback when pipx is unavailable
+    warn "pipx not found; falling back to pip install --user --break-system-packages (may conflict with system packages)"
+    python3 -m pip install --user --upgrade --break-system-packages ansible
     export PATH="$HOME/.local/bin:$PATH"
   fi
 }
