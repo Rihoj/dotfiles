@@ -53,7 +53,7 @@ extract_key_ids() {
   command -v gpg2 >/dev/null 2>&1 && gpg_cmd="gpg2"
   
   $gpg_cmd --list-secret-keys --keyid-format=long 2>/dev/null | \
-    grep -oP '(?<=sec|ssb)\s+[a-z0-9]+/\K[A-F0-9]{16}' || true
+    grep -E "^(sec|ssb)" | awk '{print $2}' | cut -d'/' -f2
 }
 
 generate_gpg_key() {
@@ -89,7 +89,7 @@ EOF
     # Get the newly generated key ID (prefer primary key, but accept subkey)
     local key_id
     key_id=$($gpg_cmd --list-secret-keys --keyid-format=long "$email" 2>/dev/null | \
-      grep -oP '(?<=sec|ssb)\s+[a-z0-9]+/\K[A-F0-9]{16}' | head -n1)
+      grep -E "^(sec|ssb)" | awk '{print $2}' | cut -d'/' -f2 | head -n1)
     
     if [[ -n "$key_id" ]]; then
       log "Key ID: $key_id" >&2
