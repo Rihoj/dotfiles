@@ -133,6 +133,7 @@ install_ansible() {
   fi
   if command -v pipx >/dev/null 2>&1; then
     pipx install --include-deps ansible
+    export PATH="$HOME/.local/bin:$PATH"
   else
     # PEP 668: externally-managed environments may block pip install --user
     # Use --break-system-packages as fallback when pipx is unavailable
