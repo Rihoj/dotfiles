@@ -10,6 +10,30 @@
 	editor = vim
 [alias]
 	co = switch
+	wt  = worktree
+	wta = worktree add
+	wtl = worktree list
+
+	# Create a new worktree + branch next to the repo:
+	#   git wtn <new-branch> [base=main]
+	# Creates: ../<repo>-wt/<new-branch> (slashes replaced with underscores)
+	wtn = "!f() { \
+		b=\"$1\"; base=\"${2:-main}\"; \
+		[ -z \"$b\" ] && { echo \"usage: git wtn <new-branch> [base=main]\" >&2; exit 2; }; \
+		root=\"$(git rev-parse --show-toplevel)\" || exit 1; \
+		repo=\"$(basename \"$root\")\"; \
+		parent=\"$(dirname \"$root\")\"; \
+		wtroot=\"$parent/${repo}-wt\"; \
+		safe=\"$(printf \"%s\" \"$b\" | tr \"/ :\" \"___\")\"; \
+		dest=\"$wtroot/$safe\"; \
+		mkdir -p \"$wtroot\" || exit 1; \
+		git fetch --prune >/dev/null 2>&1 || true; \
+		if git show-ref --verify --quiet \"refs/heads/$b\"; then \
+			git worktree add \"$dest\" \"$b\"; \
+		else \
+			git worktree add \"$dest\" -b \"$b\" \"origin/$base\"; \
+		fi; \
+	}; f"
 [pull]
 	rebase = true
 [filter "lfs"]
