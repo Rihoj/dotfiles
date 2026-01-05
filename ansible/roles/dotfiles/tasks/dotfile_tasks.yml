@@ -1,13 +1,13 @@
 ---
 - name: Stat home version of {{ dotfile_name }}
   ansible.builtin.stat:
-    path: "{{ ansible_env.HOME }}/{{ dotfile_name }}"
+    path: "{{ ansible_facts.env.HOME }}/{{ dotfile_name }}"
     follow: false
   register: home_dotfile_stat
 
 - name: Copy existing {{ dotfile_name }} to repo if it exists
   ansible.builtin.copy:
-    src: "{{ ansible_env.HOME }}/{{ dotfile_name }}"
+    src: "{{ ansible_facts.env.HOME }}/{{ dotfile_name }}"
     dest: "{{ dotfiles_dir }}/{{ dotfile_dir }}/{{ dotfile_src }}"
     remote_src: true
     mode: preserve
@@ -18,8 +18,8 @@
 
 - name: Backup existing {{ dotfile_name }} to backup directory
   ansible.builtin.copy:
-    src: "{{ ansible_env.HOME }}/{{ dotfile_name }}"
-    dest: "{{ backup_dir }}/{{ dotfile_name | regex_replace('^[.]', '') }}.{{ ansible_date_time.iso8601_basic_short }}"
+    src: "{{ ansible_facts.env.HOME }}/{{ dotfile_name }}"
+    dest: "{{ backup_dir }}/{{ dotfile_name | regex_replace('^[.]', '') }}.{{ ansible_facts.date_time.iso8601_basic_short }}"
     remote_src: true
     mode: preserve
   when:
@@ -29,7 +29,7 @@
 
 - name: Remove old {{ dotfile_name }} before linking
   ansible.builtin.file:
-    path: "{{ ansible_env.HOME }}/{{ dotfile_name }}"
+    path: "{{ ansible_facts.env.HOME }}/{{ dotfile_name }}"
     state: absent
   when:
     - migrate_existing_dotfiles | default(false) | bool
@@ -44,7 +44,7 @@
 - name: Symlink {{ dotfile_name }} to repo version
   ansible.builtin.file:
     src: "{{ dotfiles_dir }}/{{ dotfile_dir }}/{{ dotfile_src }}"
-    dest: "{{ ansible_env.HOME }}/{{ dotfile_name }}"
+    dest: "{{ ansible_facts.env.HOME }}/{{ dotfile_name }}"
     state: link
     force: true
   when: repo_dotfile_stat.stat.exists

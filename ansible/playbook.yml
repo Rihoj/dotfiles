@@ -5,11 +5,11 @@
   gather_facts: true
 
   vars:
-    dotfiles_dir: "{{ ansible_env.HOME }}/.dotfiles"
+    dotfiles_dir: "{{ ansible_facts.env.HOME }}/.dotfiles"
     dotfiles_repo: ""
     install_deps: true
     set_default_shell: true
-    backup_dir: "{{ ansible_env.HOME }}/.dotfiles-backups"
+    backup_dir: "{{ ansible_facts.env.HOME }}/.dotfiles-backups"
 
   pre_tasks:
     - name: Ensure backup directory exists
