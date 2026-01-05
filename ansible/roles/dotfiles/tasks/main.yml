@@ -208,6 +208,43 @@
   when: dotfiles_repo | length == 0
   tags: repo
 
+- name: Detect if running from outside dotfiles directory
+  ansible.builtin.stat:
+    path: "{{ playbook_dir }}/../zsh/zshrc.d"
+  register: source_zshrc_d
+  when: dotfiles_repo | length == 0
+  tags: repo
+
+- name: Check if dotfiles directory needs population
+  ansible.builtin.find:
+    paths: "{{ dotfiles_dir }}/zsh/zshrc.d"
+    file_type: file
+    patterns: "*.zsh"
+  register: existing_zshrc_d_files
+  when:
+    - dotfiles_repo | length == 0
+    - source_zshrc_d.stat.exists | default(false)
+  tags: repo
+
+- name: Copy dotfiles content to dotfiles directory
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../{{ item }}/"
+    dest: "{{ dotfiles_dir }}/{{ item }}/"
+    mode: preserve
+    remote_src: true
+  loop:
+    - zsh
+    - git
+    - vim
+    - shell
+    - npm
+    - bin
+  when:
+    - dotfiles_repo | length == 0
+    - source_zshrc_d.stat.exists | default(false)
+    - existing_zshrc_d_files.matched | default(0) == 0
+  tags: repo
+
 # Zshrc linking with backups
 - name: Ensure zsh directories exist
   ansible.builtin.file:
