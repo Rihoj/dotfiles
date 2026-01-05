@@ -118,7 +118,7 @@
 
 - name: Define Nerd Font download targets
   ansible.builtin.set_fact:
-    nerd_font_dir: "{{ ansible_env.HOME }}/.local/share/fonts/MesloLGS-NF"
+    nerd_font_dir: "{{ ansible_facts.env.HOME }}/.local/share/fonts/MesloLGS-NF"
     nerd_font_files:
       - name: "MesloLGS NF Regular.ttf"
         url: "https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Regular.ttf"
@@ -208,6 +208,67 @@
   when: dotfiles_repo | length == 0
   tags: repo
 
+- name: Detect if running from outside dotfiles directory
+  ansible.builtin.stat:
+    path: "{{ playbook_dir }}/../zsh/zshrc.d"
+  register: source_zshrc_d
+  when: dotfiles_repo | length == 0
+  tags: repo
+
+- name: Check if target zshrc.d directory exists
+  ansible.builtin.stat:
+    path: "{{ dotfiles_dir }}/zsh/zshrc.d"
+  register: target_zshrc_d
+  when:
+    - dotfiles_repo | length == 0
+    - source_zshrc_d.stat.exists | default(false)
+  tags: repo
+
+- name: Check if dotfiles directory needs population
+  ansible.builtin.find:
+    paths: "{{ dotfiles_dir }}/zsh/zshrc.d"
+    file_type: file
+    patterns: "*.zsh"
+  register: existing_zshrc_d_files
+  when:
+    - dotfiles_repo | length == 0
+    - source_zshrc_d.stat.exists | default(false)
+    - target_zshrc_d.stat.exists | default(false)
+  tags: repo
+
+- name: Check which dotfiles directories exist in source
+  ansible.builtin.stat:
+    path: "{{ playbook_dir }}/../{{ item }}"
+  loop:
+    - zsh
+    - git
+    - vim
+    - shell
+    - npm
+    - bin
+  register: source_dotfiles_dirs
+  when:
+    - dotfiles_repo | length == 0
+    - source_zshrc_d.stat.exists | default(false)
+    - existing_zshrc_d_files.matched | default(0) == 0
+  tags: repo
+
+- name: Copy dotfiles content to dotfiles directory
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../{{ dir_item.item }}/"
+    dest: "{{ dotfiles_dir }}/{{ dir_item.item }}/"
+    mode: preserve
+    remote_src: true
+  loop: "{{ source_dotfiles_dirs.results | default([]) }}"
+  loop_control:
+    loop_var: dir_item
+  when:
+    - dotfiles_repo | length == 0
+    - source_zshrc_d.stat.exists | default(false)
+    - existing_zshrc_d_files.matched | default(0) == 0
+    - dir_item.stat.exists | default(false)
+  tags: repo
+
 # Zshrc linking with backups
 - name: Ensure zsh directories exist
   ansible.builtin.file:
@@ -249,22 +310,22 @@
 
 - name: Stat existing .zshrc
   ansible.builtin.stat:
-    path: "{{ ansible_env.HOME }}/.zshrc"
+    path: "{{ ansible_facts.env.HOME }}/.zshrc"
     follow: false
   register: zshrc_stat
   tags: config
 
 - name: Stat for migration check
   ansible.builtin.stat:
-    path: "{{ ansible_env.HOME }}/.zshrc"
+    path: "{{ ansible_facts.env.HOME }}/.zshrc"
     follow: false
   register: home_zshrc_to_migrate
   tags: config
 
 - name: Backup existing .zshrc to backup directory (if migrating)
   ansible.builtin.copy:
-    src: "{{ ansible_env.HOME }}/.zshrc"
-    dest: "{{ backup_dir }}/zshrc.{{ ansible_date_time.iso8601_basic_short }}"
+    src: "{{ ansible_facts.env.HOME }}/.zshrc"
+    dest: "{{ backup_dir }}/zshrc.{{ ansible_facts.date_time.iso8601_basic_short }}"
     remote_src: true
     mode: preserve
   when: 
@@ -275,7 +336,7 @@
 
 - name: Copy home .zshrc to repo (if migrating and exists)
   ansible.builtin.copy:
-    src: "{{ ansible_env.HOME }}/.zshrc"
+    src: "{{ ansible_facts.env.HOME }}/.zshrc"
     dest: "{{ dotfiles_dir }}/zsh/.zshrc"
     remote_src: true
     mode: "0644"
@@ -287,7 +348,7 @@
 
 - name: Remove old .zshrc before copying repo version (if migrating)
   ansible.builtin.file:
-    path: "{{ ansible_env.HOME }}/.zshrc"
+    path: "{{ ansible_facts.env.HOME }}/.zshrc"
     state: absent
   when: 
     - migrate_existing_dotfiles | default(false) | bool
@@ -304,7 +365,7 @@
 - name: Copy .zshrc from repo to home (unless migrating from home)
   ansible.builtin.copy:
     src: "{{ dotfiles_dir }}/zsh/.zshrc"
-    dest: "{{ ansible_env.HOME }}/.zshrc"
+    dest: "{{ ansible_facts.env.HOME }}/.zshrc"
     remote_src: true
     mode: "0644"
   when: repo_zshrc_stat_final.stat.exists and not (migrate_existing_dotfiles | default(false) | bool and home_zshrc_to_migrate.stat.exists)
@@ -313,14 +374,14 @@
 # Local overrides - NEVER overwrite if exists
 - name: Stat .zshrc.local
   ansible.builtin.stat:
-    path: "{{ ansible_env.HOME }}/.zshrc.local"
+    path: "{{ ansible_facts.env.HOME }}/.zshrc.local"
   register: zshrc_local_stat
   tags: config
 
 - name: Create .zshrc.local from template ONLY if missing
   ansible.builtin.template:
     src: zshrc.local.j2
-    dest: "{{ ansible_env.HOME }}/.zshrc.local"
+    dest: "{{ ansible_facts.env.HOME }}/.zshrc.local"
     mode: "0644"
     force: false
   when: not zshrc_local_stat.stat.exists
@@ -358,7 +419,7 @@
 
 - name: Stat home version of {{ dotfile.name }}
   ansible.builtin.stat:
-    path: "{{ ansible_env.HOME }}/{{ dotfile.name }}"
+    path: "{{ ansible_facts.env.HOME }}/{{ dotfile.name }}"
     follow: false
   register: home_dotfile_stat
   loop: "{{ managed_dotfiles }}"
@@ -386,7 +447,7 @@
 
 - name: Stat Oh My Zsh directory
   ansible.builtin.stat:
-    path: "{{ ansible_env.HOME }}/.oh-my-zsh"
+    path: "{{ ansible_facts.env.HOME }}/.oh-my-zsh"
   register: omz_stat
   tags: omz
 
@@ -415,7 +476,7 @@
       ansible.builtin.command: >-
         env RUNZSH=no CHSH=no KEEP_ZSHRC=yes sh {{ omz_tmp.path }}
       args:
-        creates: "{{ ansible_env.HOME }}/.oh-my-zsh"
+        creates: "{{ ansible_facts.env.HOME }}/.oh-my-zsh"
   when:
     - not omz_stat.stat.exists
     - zsh_available.rc == 0
@@ -432,7 +493,7 @@
 - name: Install zsh-autosuggestions plugin
   ansible.builtin.git:
     repo: https://github.com/zsh-users/zsh-autosuggestions.git
-    dest: "{{ ansible_env.HOME }}/.oh-my-zsh/plugins/zsh-autosuggestions"
+    dest: "{{ ansible_facts.env.HOME }}/.oh-my-zsh/plugins/zsh-autosuggestions"
     version: master
   when: zsh_available.rc == 0
   tags: omz
@@ -440,7 +501,7 @@
 - name: Install zsh-syntax-highlighting plugin
   ansible.builtin.git:
     repo: https://github.com/zsh-users/zsh-syntax-highlighting.git
-    dest: "{{ ansible_env.HOME }}/.oh-my-zsh/plugins/zsh-syntax-highlighting"
+    dest: "{{ ansible_facts.env.HOME }}/.oh-my-zsh/plugins/zsh-syntax-highlighting"
     version: master
   when: zsh_available.rc == 0
   tags: omz
@@ -448,7 +509,7 @@
 - name: Install F-Sy-H (fast-syntax-highlighting) plugin
   ansible.builtin.git:
     repo: https://github.com/zdharma-continuum/fast-syntax-highlighting.git
-    dest: "{{ ansible_env.HOME }}/.oh-my-zsh/plugins/F-Sy-H"
+    dest: "{{ ansible_facts.env.HOME }}/.oh-my-zsh/plugins/F-Sy-H"
     version: master
   when: zsh_available.rc == 0
   tags: omz
@@ -456,26 +517,26 @@
 - name: Install powerlevel10k theme
   ansible.builtin.git:
     repo: https://github.com/romkatv/powerlevel10k.git
-    dest: "{{ ansible_env.HOME }}/.oh-my-zsh/themes/powerlevel10k"
+    dest: "{{ ansible_facts.env.HOME }}/.oh-my-zsh/themes/powerlevel10k"
     version: master
   when: zsh_available.rc == 0
   tags: omz
 
 # Shell change
 - name: Determine current shell (Linux)
-  ansible.builtin.command: "getent passwd {{ ansible_user_id }}"
+  ansible.builtin.command: "getent passwd {{ ansible_facts.user_id }}"
   register: passwd_entry_getent
   changed_when: false
   failed_when: false
-  when: ansible_system == 'Linux'
+  when: ansible_facts.system == 'Linux'
   tags: shell
 
 - name: Determine current shell (fallback)
-  ansible.builtin.command: "dscl . -read /Users/{{ ansible_user_id }} UserShell"
+  ansible.builtin.command: "dscl . -read /Users/{{ ansible_facts.user_id }} UserShell"
   register: passwd_entry_dscl
   changed_when: false
   failed_when: false
-  when: ansible_system == 'Darwin'
+  when: ansible_facts.system == 'Darwin'
   tags: shell
 
 - name: Set passwd entry fact
@@ -493,7 +554,7 @@
 
 - name: Set default shell to zsh (using ansible.builtin.user)
   ansible.builtin.user:
-    name: "{{ ansible_user_id }}"
+    name: "{{ ansible_facts.user_id }}"
     shell: "{{ zsh_path.stdout }}"
   register: user_shell_change
   become: true
@@ -505,13 +566,13 @@
   tags: shell
 
 - name: Verify shell change
-  ansible.builtin.command: "getent passwd {{ ansible_user_id }}"
+  ansible.builtin.command: "getent passwd {{ ansible_facts.user_id }}"
   register: passwd_entry_verify
   changed_when: false
   failed_when: false
   when:
     - set_default_shell | bool
-    - ansible_system == 'Linux'
+    - ansible_facts.system == 'Linux'
   tags: shell
 
 - name: Report shell status
@@ -542,7 +603,7 @@
 # Bin scripts linking
 - name: Ensure ~/.local/bin exists
   ansible.builtin.file:
-    path: "{{ ansible_env.HOME }}/.local/bin"
+    path: "{{ ansible_facts.env.HOME }}/.local/bin"
     state: directory
     mode: "0755"
   tags: bin
@@ -550,7 +611,7 @@
 - name: Link bin scripts to ~/.local/bin
   ansible.builtin.file:
     src: "{{ dotfiles_dir }}/bin/{{ item }}"
-    dest: "{{ ansible_env.HOME }}/.local/bin/{{ item }}"
+    dest: "{{ ansible_facts.env.HOME }}/.local/bin/{{ item }}"
     state: link
     force: true
   loop:
