@@ -303,7 +303,18 @@ typeset -g POWERLEVEL9K_DIR_MAX_LENGTH=30
 
 User-specific git settings are **not stored in the repository** to keep sensitive information private. Instead, they're configured locally on each machine using `~/.gitconfig.local`.
 
-**First-time setup:**
+**Automatic setup during bootstrap:**
+
+The bootstrap script prompts for your git identity at the beginning:
+- Name
+- Email address
+- GPG signing key (if you have GPG installed)
+
+The `.gitconfig.local` file is created automatically with your settings.
+
+**Reconfiguration or manual setup:**
+
+If you need to update your git identity or configure it manually:
 ```bash
 # Run the interactive setup script
 ~/.dotfiles/bin/setup-git-config.sh
@@ -312,11 +323,7 @@ User-specific git settings are **not stored in the repository** to keep sensitiv
 This script will:
 1. Prompt for your name and email
 2. List available GPG keys or offer to generate a new ed25519 key
-3. Create `~/.gitconfig.local` with your settings
-
-**What gets configured:**
-- Your git identity (name and email)
-- GPG signing key (optional, for commit signing)
+3. Create or update `~/.gitconfig.local` with your settings
 
 **Manual configuration** (if you prefer):
 ```bash

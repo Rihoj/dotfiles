@@ -444,13 +444,36 @@
   register: gitconfig_local_stat
   tags: config
 
+- name: Create .gitconfig.local from bootstrap input
+  ansible.builtin.copy:
+    content: |
+      # ~/.gitconfig.local
+      # Machine-specific git configuration. This file stays out of version control.
+      # Created by bootstrap.sh
+
+      [user]
+      	name = {{ git_user_name }}
+      	email = {{ git_user_email }}
+      {% if git_signing_key is defined and git_signing_key %}
+      	signingkey = {{ git_signing_key }}
+      {% endif %}
+    dest: "{{ ansible_facts.env.HOME }}/.gitconfig.local"
+    mode: "0644"
+  when:
+    - not gitconfig_local_stat.stat.exists
+    - git_user_name is defined
+    - git_user_email is defined
+  tags: config
+
 - name: Notify about git user configuration
   ansible.builtin.debug:
     msg:
       - "Git user configuration (.gitconfig.local) not found"
       - "Run: {{ dotfiles_dir }}/bin/setup-git-config.sh to configure your git identity"
       - "This will prompt for your name, email, and GPG key for commit signing"
-  when: not gitconfig_local_stat.stat.exists
+  when:
+    - not gitconfig_local_stat.stat.exists
+    - (git_user_name is not defined or git_user_email is not defined)
   tags: config
 
 - name: Document that .gitconfig.local is user-owned

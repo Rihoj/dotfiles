@@ -20,12 +20,11 @@ cd ~/.dotfiles
 
 # Run the bootstrap (installs Ansible if needed, then provisions)
 ./bootstrap.sh
-
-# Configure your git identity (name, email, GPG key)
-./bin/setup-git-config.sh
 ```
 
 That's it. Everything else is optional flags.
+
+The bootstrap will prompt you for your git identity (name, email, GPG key) at the beginning.
 
 ## Optional Flags
 
