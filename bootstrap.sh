@@ -103,14 +103,12 @@ install_packages() {
   case "$pkg_mgr" in
     apt)
       "${SUDO[@]}" apt-get update -y
-      "${SUDO[@]}" apt-get install -y "${pkgs[@]}"
       # Try to install pipx as preferred solution for PEP 668 environments
-      "${SUDO[@]}" apt-get install -y pipx 2>/dev/null || true
+      "${SUDO[@]}" apt-get install -y "${pkgs[@]}" pipx 2>/dev/null || "${SUDO[@]}" apt-get install -y "${pkgs[@]}"
       ;;
     dnf)
-      "${SUDO[@]}" dnf install -y "${pkgs[@]}"
       # Try to install pipx as preferred solution for PEP 668 environments
-      "${SUDO[@]}" dnf install -y pipx 2>/dev/null || true
+      "${SUDO[@]}" dnf install -y "${pkgs[@]}" pipx 2>/dev/null || "${SUDO[@]}" dnf install -y "${pkgs[@]}"
       ;;
     yum)
       "${SUDO[@]}" yum install -y "${pkgs[@]}"
