@@ -1,9 +1,9 @@
 [init]
 	defaultBranch = main
-[user]
-	email = rihoj1@gmail.com
-	name = James Ray
-	signingkey = 71ACD1B2AE4DAB11
+# User-specific configuration (name, email, signingkey) is sourced from ~/.gitconfig.local
+# Run: ~/.dotfiles/bin/setup-git-config.sh to configure
+[include]
+	path = ~/.gitconfig.local
 [commit]
 	gpgsign = true
 [core]
