@@ -449,13 +449,13 @@
     content: |
       # ~/.gitconfig.local
       # Machine-specific git configuration. This file stays out of version control.
-      # Created by bootstrap.sh
+      # Created during bootstrap
 
       [user]
-      	name = {{ git_user_name }}
-      	email = {{ git_user_email }}
+      	name = {{ git_user_name | quote }}
+      	email = {{ git_user_email | quote }}
       {% if git_signing_key is defined and git_signing_key %}
-      	signingkey = {{ git_signing_key }}
+      	signingkey = {{ git_signing_key | quote }}
       {% endif %}
     dest: "{{ ansible_facts.env.HOME }}/.gitconfig.local"
     mode: "0644"

@@ -1,7 +1,7 @@
 [init]
 	defaultBranch = main
 # User-specific configuration (name, email, signingkey) is sourced from ~/.gitconfig.local
-# Run: setup-git-config.sh to configure (available in ~/.local/bin after provisioning)
+# Run: ~/.local/bin/setup-git-config.sh to configure (available after provisioning)
 [include]
 	path = ~/.gitconfig.local
 [commit]

@@ -143,6 +143,12 @@ install_ansible() {
   fi
 }
 
+validate_git_config_value() {
+  local value="$1"
+  # Check for characters that would break git config INI format
+  [[ "$value" =~ [][$'\n'$'\r'=] ]]
+}
+
 prompt_git_config() {
   # Skip if .gitconfig.local already exists
   if [[ -f "$HOME/.gitconfig.local" ]]; then
@@ -162,24 +168,27 @@ prompt_git_config() {
   
   # Prompt for name
   local name=""
-  while [[ -z "$name" ]]; do
+  while [[ -z "$name" ]] || validate_git_config_value "$name"; do
     read -r -p "Full name [$current_name]: " name
     name="${name:-$current_name}"
     if [[ -z "$name" ]]; then
       warn "Name cannot be empty"
+    elif validate_git_config_value "$name"; then
+      warn "Name contains invalid characters (newlines, brackets, or equals signs)"
     fi
   done
   
   # Prompt for email
   local email=""
-  while [[ -z "$email" ]]; do
+  while [[ -z "$email" ]] || validate_git_config_value "$email" || [[ ! "$email" =~ ^[^@]+@[^@]+$ ]]; do
     read -r -p "Email address [$current_email]: " email
     email="${email:-$current_email}"
     if [[ -z "$email" ]]; then
       warn "Email cannot be empty"
+    elif validate_git_config_value "$email"; then
+      warn "Email contains invalid characters (newlines, brackets, or equals signs)"
     elif [[ ! "$email" =~ ^[^@]+@[^@]+$ ]]; then
       warn "Email format appears invalid"
-      email=""
     fi
   done
   

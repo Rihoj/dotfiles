@@ -121,7 +121,7 @@ EOF
 validate_git_config_value() {
   local value="$1"
   # Check for characters that would break git config INI format
-  [[ "$value" =~ [$'\n'$'\r'[=\]] ]]
+  [[ "$value" =~ [][$'\n'$'\r'=] ]]
 }
 
 main() {
