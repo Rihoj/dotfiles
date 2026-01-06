@@ -8,6 +8,7 @@
 	gpgsign = true
 [core]
 	editor = vim
+	excludesfile = ~/.gitignore_global
 [alias]
 	co = switch
 	wt  = worktree

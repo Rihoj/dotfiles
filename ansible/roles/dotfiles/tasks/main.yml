@@ -413,12 +413,13 @@
   ansible.builtin.set_fact:
     managed_dotfiles:
       - { name: ".gitconfig", dir: "git", src_name: ".gitconfig" }
+      - { name: ".gitignore_global", dir: "git", src_name: ".gitignore_global" }
       - { name: ".vimrc", dir: "vim", src_name: ".vimrc" }
       - { name: ".bashrc", dir: "shell", src_name: ".bashrc" }
       - { name: ".npmrc", dir: "npm", src_name: ".npmrc" }
   tags: config
 
-- name: Stat home version of {{ dotfile.name }}
+- name: Stat home version of managed dotfiles
   ansible.builtin.stat:
     path: "{{ ansible_facts.env.HOME }}/{{ dotfile.name }}"
     follow: false
@@ -663,6 +664,7 @@
     dest: "{{ ansible_facts.env.HOME }}/.local/bin/{{ item }}"
     state: link
     force: true
+    follow: false
   loop:
     - dotfiles-check-updates.sh
     - dotfiles-pull-updates.sh
