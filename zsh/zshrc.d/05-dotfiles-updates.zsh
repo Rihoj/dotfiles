@@ -7,8 +7,10 @@
 if [[ -z "$DOTFILES_DIR" ]]; then
   # Try to detect from the zshrc location
   if [[ -L "$HOME/.zshrc" ]]; then
-    local zshrc_target="$(readlink "$HOME/.zshrc")"
+    zshrc_target="$(readlink "$HOME/.zshrc")"
     if [[ -n "$zshrc_target" ]]; then
+      # If readlink returns a relative path, resolve it relative to $HOME
+      [[ "$zshrc_target" != /* ]] && zshrc_target="$HOME/$zshrc_target"
       DOTFILES_DIR="$(cd "$(dirname "$(dirname "$zshrc_target")")" 2>/dev/null && pwd)"
     fi
   fi
