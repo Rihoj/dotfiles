@@ -21,12 +21,14 @@ That's it! You're done. Everything is configured and ready to use.
 ## What Just Happened?
 
 The bootstrap script:
-1. ✅ Installed system dependencies (git, zsh, curl, vim)
-2. ✅ Installed Oh My Zsh framework
-3. ✅ Linked configuration files to your home directory
-4. ✅ Created `~/.zshrc.local` for your custom settings
-5. ✅ Backed up any existing files to `~/.dotfiles-backups/`
-6. ✅ Set zsh as your default shell
+1. ✅ Prompted for your git identity (name, email, GPG key)
+2. ✅ Installed system dependencies (git, zsh, curl, vim)
+3. ✅ Installed Oh My Zsh framework
+4. ✅ Linked configuration files to your home directory
+5. ✅ Created `~/.gitconfig.local` with your git identity
+6. ✅ Created `~/.zshrc.local` for your custom settings
+7. ✅ Backed up any existing files to `~/.dotfiles-backups/`
+8. ✅ Set zsh as your default shell
 
 ## Next Steps
 

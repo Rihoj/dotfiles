@@ -143,8 +143,119 @@ install_ansible() {
   fi
 }
 
+validate_git_config_value() {
+  local value="$1"
+  # Check for characters that would break git config INI format
+  [[ "$value" =~ [][$'\n'$'\r'=] ]]
+}
+
+prompt_git_config() {
+  # Skip if .gitconfig.local already exists
+  if [[ -f "$HOME/.gitconfig.local" ]]; then
+    log "Git configuration already exists at ~/.gitconfig.local"
+    return
+  fi
+  
+  log "Git User Configuration"
+  log "Setting up your git identity (name, email, GPG key)"
+  echo ""
+  
+  # Get current git config values as defaults
+  local current_name=""
+  local current_email=""
+  current_name=$(git config --global user.name 2>/dev/null || true)
+  current_email=$(git config --global user.email 2>/dev/null || true)
+  
+  # Prompt for name
+  local name=""
+  while [[ -z "$name" ]] || validate_git_config_value "$name"; do
+    read -r -p "Full name [$current_name]: " name
+    name="${name:-$current_name}"
+    if [[ -z "$name" ]]; then
+      warn "Name cannot be empty"
+    elif validate_git_config_value "$name"; then
+      warn "Name contains invalid characters (newlines, brackets, or equals signs)"
+    fi
+  done
+  
+  # Prompt for email
+  local email=""
+  while [[ -z "$email" ]] || validate_git_config_value "$email" || [[ ! "$email" =~ ^[^@]+@[^@]+$ ]]; do
+    read -r -p "Email address [$current_email]: " email
+    email="${email:-$current_email}"
+    if [[ -z "$email" ]]; then
+      warn "Email cannot be empty"
+    elif validate_git_config_value "$email"; then
+      warn "Email contains invalid characters (newlines, brackets, or equals signs)"
+    elif [[ ! "$email" =~ ^[^@]+@[^@]+$ ]]; then
+      warn "Email format appears invalid"
+    fi
+  done
+  
+  # Check for GPG
+  local signing_key=""
+  if command -v gpg >/dev/null 2>&1 || command -v gpg2 >/dev/null 2>&1; then
+    local gpg_cmd="gpg"
+    command -v gpg2 >/dev/null 2>&1 && gpg_cmd="gpg2"
+    
+    # Check for existing keys
+    local key_list
+    key_list=$($gpg_cmd --list-secret-keys --keyid-format=long 2>/dev/null | grep -E "^(sec|ssb)" || true)
+    
+    if [[ -n "$key_list" ]]; then
+      log "Found existing GPG keys:"
+      echo "$key_list"
+      echo ""
+      
+      # Extract key IDs
+      local -a key_ids
+      mapfile -t key_ids < <($gpg_cmd --list-secret-keys --keyid-format=long 2>/dev/null | \
+        grep -E "^(sec|ssb)" | awk '{print $2}' | cut -d'/' -f2)
+      
+      if [[ ${#key_ids[@]} -gt 0 ]]; then
+        echo "Available keys:"
+        local i=1
+        for key in "${key_ids[@]}"; do
+          echo "  $i) $key"
+          ((i++))
+        done
+        echo "  0) Skip GPG configuration"
+        echo ""
+        
+        local choice=""
+        read -r -p "Select a key (enter number) [1]: " choice
+        choice="${choice:-1}"
+        
+        if [[ "$choice" == "0" ]]; then
+          log "Skipping GPG key configuration"
+        elif [[ "$choice" =~ ^[0-9]+$ ]] && [[ "$choice" -ge 1 ]] && [[ "$choice" -le ${#key_ids[@]} ]]; then
+          signing_key="${key_ids[$((choice-1))]}"
+          log "Selected key: $signing_key"
+        else
+          warn "Invalid selection, skipping GPG configuration"
+        fi
+      fi
+    else
+      log "No existing GPG keys found"
+      log "You can generate a GPG key later by running: setup-git-config.sh"
+    fi
+  else
+    log "GPG not installed, skipping key configuration"
+  fi
+  
+  # Export variables for ansible
+  GIT_USER_NAME="$name"
+  GIT_USER_EMAIL="$email"
+  GIT_SIGNING_KEY="$signing_key"
+  
+  echo ""
+}
+
 main() {
   detect_privilege_escalation
+  
+  # Prompt for git configuration early (before long-running tasks)
+  prompt_git_config
   
   if [[ $INSTALL_DEPS -eq 0 ]]; then
     need_cmd python3
@@ -174,6 +285,17 @@ main() {
   fi
   # Expose migration flag opt-in via env or args later; default false
   extra_vars+=("migrate_existing_dotfiles=${MIGRATE_EXISTING_DOTFILES:-false}")
+  
+  # Pass git config if collected
+  if [[ -n "${GIT_USER_NAME:-}" ]]; then
+    extra_vars+=("git_user_name=${GIT_USER_NAME}")
+  fi
+  if [[ -n "${GIT_USER_EMAIL:-}" ]]; then
+    extra_vars+=("git_user_email=${GIT_USER_EMAIL}")
+  fi
+  if [[ -n "${GIT_SIGNING_KEY:-}" ]]; then
+    extra_vars+=("git_signing_key=${GIT_SIGNING_KEY}")
+  fi
 
   log "Running Ansible playbook"
   local check_flag=""

@@ -10,6 +10,8 @@ Learn how to customize your dotfiles to match your workflow.
 | Custom functions | `zsh/zshrc.d/15-functions.zsh` | ✅ Yes |
 | Environment variables | `zsh/zshrc.d/30-env.zsh` | ✅ Yes |
 | Key bindings | `zsh/zshrc.d/20-keybindings.zsh` | ✅ Yes |
+| Git global config | `git/.gitconfig` | ✅ Yes |
+| Git user identity | `~/.gitconfig.local` | ❌ No |
 | Machine-specific config | `~/.zshrc.local` | ❌ No |
 | API keys / secrets | `~/.zshrc.local` | ❌ No |
 | Work vs personal differences | `~/.zshrc.local` | ❌ No |
@@ -297,16 +299,56 @@ typeset -g POWERLEVEL9K_DIR_MAX_LENGTH=30
 
 ## Git Configuration
 
+### User-Specific Configuration (Name, Email, GPG Key)
+
+User-specific git settings are **not stored in the repository** to keep sensitive information private. Instead, they're configured locally on each machine using `~/.gitconfig.local`.
+
+**Automatic setup during bootstrap:**
+
+The bootstrap script prompts for your git identity at the beginning:
+- Name
+- Email address
+- GPG signing key (if you have GPG installed)
+
+The `.gitconfig.local` file is created automatically with your settings.
+
+**Reconfiguration or manual setup:**
+
+If you need to update your git identity or configure it manually:
+```bash
+# Run the interactive setup script
+~/.dotfiles/bin/setup-git-config.sh
+```
+
+This script will:
+1. Prompt for your name and email
+2. List available GPG keys or offer to generate a new ed25519 key
+3. Create or update `~/.gitconfig.local` with your settings
+
+**Manual configuration** (if you prefer):
+```bash
+vim ~/.gitconfig.local
+```
+
+Example:
+```ini
+# ~/.gitconfig.local
+[user]
+    name = Your Name
+    email = your.email@example.com
+    signingkey = YOUR_GPG_KEY_ID  # Optional, for signed commits
+```
+
+### Repository Git Configuration
+
+Global git settings are stored in `~/.dotfiles/git/.gitconfig`:
+
 ```bash
 vim ~/.dotfiles/git/.gitconfig
 ```
 
 Common settings:
 ```ini
-[user]
-    name = Your Name
-    email = your.email@example.com
-
 [core]
     editor = vim
     pager = less -FRX
@@ -329,6 +371,8 @@ Common settings:
 [init]
     defaultBranch = main
 ```
+
+**Note**: The repository `.gitconfig` includes your `~/.gitconfig.local` automatically via the `[include]` directive, so both files work together.
 
 ## Vim Configuration
 

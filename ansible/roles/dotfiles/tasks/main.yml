@@ -438,6 +438,54 @@
   loop: "{{ managed_dotfiles }}"
   tags: config
 
+# Git local configuration (.gitconfig.local)
+- name: Stat .gitconfig.local
+  ansible.builtin.stat:
+    path: "{{ ansible_facts.env.HOME }}/.gitconfig.local"
+  register: gitconfig_local_stat
+  tags: config
+
+- name: Create .gitconfig.local from bootstrap input
+  ansible.builtin.copy:
+    content: |
+      # ~/.gitconfig.local
+      # Machine-specific git configuration. This file stays out of version control.
+      # Created during bootstrap
+
+      [user]
+      	name = {{ git_user_name | quote }}
+      	email = {{ git_user_email | quote }}
+      {% if git_signing_key is defined and git_signing_key %}
+      	signingkey = {{ git_signing_key | quote }}
+      {% endif %}
+    dest: "{{ ansible_facts.env.HOME }}/.gitconfig.local"
+    mode: "0644"
+  when:
+    - not gitconfig_local_stat.stat.exists
+    - git_user_name is defined
+    - git_user_email is defined
+  tags: config
+
+- name: Notify about git user configuration
+  ansible.builtin.debug:
+    msg:
+      - "Git user configuration (.gitconfig.local) not found"
+      - "Run: {{ dotfiles_dir }}/bin/setup-git-config.sh to configure your git identity"
+      - "This will prompt for your name, email, and GPG key for commit signing"
+  when:
+    - not gitconfig_local_stat.stat.exists
+    - (git_user_name is not defined or git_user_email is not defined)
+  tags: config
+
+- name: Document that .gitconfig.local is user-owned
+  ansible.builtin.debug:
+    msg:
+      - "~/.gitconfig.local exists and is NEVER modified by this playbook"
+      - "This file contains your git identity (name, email, GPG key)"
+      - "To reconfigure, run: {{ dotfiles_dir }}/bin/setup-git-config.sh"
+  when: gitconfig_local_stat.stat.exists
+  tags: config
+
 # Oh My Zsh installation
 - name: Check if zsh is available
   ansible.builtin.shell: command -v zsh
@@ -619,6 +667,7 @@
     - dotfiles-check-updates.sh
     - dotfiles-pull-updates.sh
     - dotfiles-link-bin.sh
+    - setup-git-config.sh
   when: dotfiles_dir is defined
   tags: bin
 
