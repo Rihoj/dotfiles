@@ -37,8 +37,8 @@
 
 	# Interactive fixup commit using fzf
 	fixup = "!f() { \
-		SHA=$(git log --oneline --reverse | fzf --no-sort --ansi --reverse --cycle --print-query --layout=reverse | head -n1 | awk '{print $1}'); \
-		if [ -n \"$SHA\" ]; then \
+		SHA=$(git log --oneline | fzf --no-sort --ansi --cycle --layout=reverse | awk '{print $1}'); \
+		if [ -n \"$SHA\" ] && git rev-parse --verify \"$SHA\" >/dev/null 2>&1; then \
 			git commit --fixup=\"$SHA\"; \
 		fi; \
 	}; f"
