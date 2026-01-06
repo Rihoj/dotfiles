@@ -13,6 +13,7 @@
   pre_tasks:
     - name: Set dotfiles_dir from playbook location if not provided
       ansible.builtin.set_fact:
+        # Use dotfiles_dir if passed via -e, otherwise auto-detect from playbook location
         dotfiles_dir: "{{ dotfiles_dir | default(playbook_dir | dirname) }}"
       tags: always
 
