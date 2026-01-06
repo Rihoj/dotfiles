@@ -9,6 +9,7 @@
       - less
       - vim
       - fonts-powerline
+      - fzf
   tags: packages
 
 - name: Check if sudo is available
