@@ -34,6 +34,14 @@
 			git worktree add \"$dest\" -b \"$b\" \"origin/$base\"; \
 		fi; \
 	}; f"
+
+	# Interactive fixup commit using fzf
+	fixup = "!f() { \
+		SHA=$(git log --oneline --reverse | fzf --no-sort --ansi --reverse --cycle --print-query --layout=reverse | head -n1 | awk '{print $1}'); \
+		if [ -n \"$SHA\" ]; then \
+			git commit --fixup=\"$SHA\"; \
+		fi; \
+	}; f"
 [pull]
 	rebase = true
 [filter "lfs"]
