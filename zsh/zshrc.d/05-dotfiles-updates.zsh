@@ -7,10 +7,13 @@
 if [[ -z "$DOTFILES_DIR" ]]; then
   # Try to detect from the zshrc location
   if [[ -L "$HOME/.zshrc" ]]; then
-    DOTFILES_DIR="$(dirname "$(dirname "$(readlink "$HOME/.zshrc")")")"
-  else
-    DOTFILES_DIR="$HOME/.dotfiles"
+    local zshrc_target="$(readlink "$HOME/.zshrc")"
+    if [[ -n "$zshrc_target" ]]; then
+      DOTFILES_DIR="$(cd "$(dirname "$(dirname "$zshrc_target")")" 2>/dev/null && pwd)"
+    fi
   fi
+  # Fallback to standard location if detection failed
+  [[ -z "$DOTFILES_DIR" ]] && DOTFILES_DIR="$HOME/.dotfiles"
 fi
 
 if [[ -f "$DOTFILES_DIR/bin/dotfiles-check-updates.sh" ]]; then
