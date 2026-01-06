@@ -413,7 +413,6 @@
   ansible.builtin.set_fact:
     managed_dotfiles:
       - { name: ".gitconfig", dir: "git", src_name: ".gitconfig" }
-      - { name: ".gitignore_global", dir: "git", src_name: ".gitignore_global" }
       - { name: ".vimrc", dir: "vim", src_name: ".vimrc" }
       - { name: ".bashrc", dir: "shell", src_name: ".bashrc" }
       - { name: ".npmrc", dir: "npm", src_name: ".npmrc" }
