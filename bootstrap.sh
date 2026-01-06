@@ -286,6 +286,9 @@ main() {
   # Expose migration flag opt-in via env or args later; default false
   extra_vars+=("migrate_existing_dotfiles=${MIGRATE_EXISTING_DOTFILES:-false}")
   
+  # Pass the actual repository directory location
+  extra_vars+=("dotfiles_dir=${SCRIPT_DIR}")
+  
   # Pass git config if collected
   if [[ -n "${GIT_USER_NAME:-}" ]]; then
     extra_vars+=("git_user_name=${GIT_USER_NAME}")
