@@ -66,11 +66,13 @@ Main entry point for dotfiles provisioning.
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `DOTFILES_DIR` | Target directory for dotfiles | `~/.dotfiles` |
+| `DOTFILES_DIR` | Target directory for dotfiles | Auto-detected from script location, or `~/.dotfiles` |
 
 ---
 
 ## Update Scripts
+
+> **Note:** All update scripts automatically detect the dotfiles repository location, so they work correctly regardless of where you've cloned the repository. You can override this by setting the `DOTFILES_DIR` environment variable.
 
 ### `dotfiles-check-updates.sh`
 
@@ -591,7 +593,7 @@ p10k configure                  # Configure theme
 
 | Variable | Purpose | Default |
 |----------|---------|---------|
-| `DOTFILES_DIR` | Dotfiles repository location | `~/.dotfiles` |
+| `DOTFILES_DIR` | Dotfiles repository location | Auto-detected from script location, or `~/.dotfiles` |
 | `ZSH_DOTFILES_UPDATE_FREQ` | Update check frequency (days) | `7` |
 | `ZSH_DOTFILES_AUTOUPDATE` | Auto-pull updates | `false` |
 

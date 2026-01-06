@@ -2,7 +2,16 @@
 # Check for dotfiles updates and optionally auto-update or prompt
 # Frequency controlled via ZSH_DOTFILES_UPDATE_FREQ (days)
 
-DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
+# Dynamically determine the dotfiles directory from script location
+# Resolve symlinks to get the actual script location
+SCRIPT_PATH="${BASH_SOURCE[0]}"
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+while [ -L "$SCRIPT_PATH" ]; do
+  SCRIPT_PATH="$(readlink "$SCRIPT_PATH")"
+  [[ "$SCRIPT_PATH" != /* ]] && SCRIPT_PATH="$SCRIPT_DIR/$SCRIPT_PATH"
+  SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+done
+DOTFILES_DIR="${DOTFILES_DIR:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 FREQ="${ZSH_DOTFILES_UPDATE_FREQ:-7}"       # default: check every 7 days
 AUTOUPDATE="${ZSH_DOTFILES_AUTOUPDATE:-false}" # true to auto-update when behind
 
