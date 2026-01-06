@@ -47,6 +47,7 @@
     dest: "{{ ansible_facts.env.HOME }}/{{ dotfile_name }}"
     state: link
     force: true
+    follow: false
   when: repo_dotfile_stat.stat.exists
 
 - name: Note on {{ dotfile_name }}

@@ -418,7 +418,7 @@
       - { name: ".npmrc", dir: "npm", src_name: ".npmrc" }
   tags: config
 
-- name: Stat home version of {{ dotfile.name }}
+- name: Stat home version of managed dotfiles
   ansible.builtin.stat:
     path: "{{ ansible_facts.env.HOME }}/{{ dotfile.name }}"
     follow: false
@@ -663,6 +663,7 @@
     dest: "{{ ansible_facts.env.HOME }}/.local/bin/{{ item }}"
     state: link
     force: true
+    follow: false
   loop:
     - dotfiles-check-updates.sh
     - dotfiles-pull-updates.sh
