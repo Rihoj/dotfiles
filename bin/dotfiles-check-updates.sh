@@ -12,8 +12,8 @@ while [ -L "$SCRIPT_PATH" ]; do
   SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
 done
 DOTFILES_DIR="${DOTFILES_DIR:-$(cd "$SCRIPT_DIR/.." && pwd)}"
-FREQ="${ZSH_DOTFILES_UPDATE_FREQ:-7}"       # default: check every 7 days
-AUTOUPDATE="${ZSH_DOTFILES_AUTOUPDATE:-false}" # true to auto-update when behind
+FREQ="${ZSH_DOTFILES_UPDATE_FREQ:-1}"       # default: check every day
+AUTOUPDATE="${ZSH_DOTFILES_AUTOUPDATE:-true}" # true to auto-update when behind
 
 # Only run if this is a git repo
 if [[ ! -d "$DOTFILES_DIR/.git" ]]; then
