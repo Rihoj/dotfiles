@@ -201,7 +201,7 @@ dotfiles-check-updates.sh runs
     ↓
 Check .last_update_check
     ↓
-If > 7 days → git fetch
+If > 1 day → git fetch
     ↓
 Compare HEAD with @{upstream}
     ↓
@@ -209,8 +209,8 @@ If behind → Notify or auto-update
 ```
 
 **Configuration**:
-- `ZSH_DOTFILES_UPDATE_FREQ`: Days between checks (default: 7)
-- `ZSH_DOTFILES_AUTOUPDATE`: Auto-pull or just notify (default: false)
+- `ZSH_DOTFILES_UPDATE_FREQ`: Days between checks (default: 1)
+- `ZSH_DOTFILES_AUTOUPDATE`: Auto-pull or just notify (default: true)
 
 ## Data Flow
 

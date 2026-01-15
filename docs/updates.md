@@ -50,25 +50,25 @@ Add these to `~/.zshrc.local`:
 
 ```zsh
 # How often to check (in days)
-export ZSH_DOTFILES_UPDATE_FREQ=7  # Default: 7 days
+export ZSH_DOTFILES_UPDATE_FREQ=1  # Default: 1 day
 
 # Auto-update when behind
-export ZSH_DOTFILES_AUTOUPDATE=false  # Default: false
+export ZSH_DOTFILES_AUTOUPDATE=true  # Default: true
 ```
 
 ### Update Frequencies
 
 | Frequency | Use Case | Setting |
 |-----------|----------|---------|
-| **Daily** | Active development | `export ZSH_DOTFILES_UPDATE_FREQ=1` |
-| **Weekly** | Normal use (default) | `export ZSH_DOTFILES_UPDATE_FREQ=7` |
+| **Daily** | Normal use (default) | `export ZSH_DOTFILES_UPDATE_FREQ=1` |
+| **Weekly** | Conservative | `export ZSH_DOTFILES_UPDATE_FREQ=7` |
 | **Bi-weekly** | Stable environment | `export ZSH_DOTFILES_UPDATE_FREQ=14` |
 | **Monthly** | Conservative | `export ZSH_DOTFILES_UPDATE_FREQ=30` |
 | **Never** | Manual only | `export ZSH_DOTFILES_UPDATE_FREQ=999999` |
 
 ### Auto-Update Behavior
 
-**When `AUTOUPDATE=false` (default)**:
+**When `AUTOUPDATE=false`**:
 ```
 Check → Fetch → Behind? → Notify
                     │
@@ -104,7 +104,7 @@ Check → Fetch → Behind? → Auto-pull → Re-provision? → Done
 - ⚠️ No review before applying
 - ⚠️ Could disrupt your workflow
 
-#### Auto-Update Disabled (Recommended)
+#### Auto-Update Disabled
 
 **Pros**:
 - ✅ Review changes before applying

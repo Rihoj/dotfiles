@@ -163,18 +163,18 @@ Lower numbers = loads earlier. This ensures dependencies are met.
 
 Depends on your workflow:
 
-**Conservative** (default):
-```zsh
-# Check every 7 days, manual update
-export ZSH_DOTFILES_UPDATE_FREQ=7
-export ZSH_DOTFILES_AUTOUPDATE=false
-```
-
-**Aggressive**:
+**Default**:
 ```zsh
 # Check daily, auto-update
 export ZSH_DOTFILES_UPDATE_FREQ=1
 export ZSH_DOTFILES_AUTOUPDATE=true
+```
+
+**Conservative**:
+```zsh
+# Check every 7 days, manual update
+export ZSH_DOTFILES_UPDATE_FREQ=7
+export ZSH_DOTFILES_AUTOUPDATE=false
 ```
 
 **Manual only**:

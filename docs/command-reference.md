@@ -93,23 +93,23 @@ dotfiles-check-updates.sh
 #### Configuration (in `~/.zshrc.local`)
 
 ```zsh
-# Check frequency in days (default: 7)
-export ZSH_DOTFILES_UPDATE_FREQ=7
+# Check frequency in days (default: 1)
+export ZSH_DOTFILES_UPDATE_FREQ=1
 
-# Auto-update when behind (default: false)
-export ZSH_DOTFILES_AUTOUPDATE=false
+# Auto-update when behind (default: true)
+export ZSH_DOTFILES_AUTOUPDATE=true
 ```
 
 #### Behavior
 
-**When `AUTOUPDATE=false` (default)**:
+**When `AUTOUPDATE=false`**:
 ```
-Shell starts → Check if 7+ days → Fetch → Notify if behind
+Shell starts → Check if 1+ days → Fetch → Notify if behind
 ```
 
 **When `AUTOUPDATE=true`**:
 ```
-Shell starts → Check if 7+ days → Fetch → Auto-pull if behind
+Shell starts → Check if 1+ days → Fetch → Auto-pull if behind
 ```
 
 #### Manual Run
@@ -594,8 +594,8 @@ p10k configure                  # Configure theme
 | Variable | Purpose | Default |
 |----------|---------|---------|
 | `DOTFILES_DIR` | Dotfiles repository location | Auto-detected from script location, or `~/.dotfiles` |
-| `ZSH_DOTFILES_UPDATE_FREQ` | Update check frequency (days) | `7` |
-| `ZSH_DOTFILES_AUTOUPDATE` | Auto-pull updates | `false` |
+| `ZSH_DOTFILES_UPDATE_FREQ` | Update check frequency (days) | `1` |
+| `ZSH_DOTFILES_AUTOUPDATE` | Auto-pull updates | `true` |
 
 ### Oh My Zsh
 

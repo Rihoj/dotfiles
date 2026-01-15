@@ -70,7 +70,7 @@ bin/
 **`dotfiles-check-updates.sh`**
 - Purpose: Check for upstream updates periodically
 - Triggered: On shell startup (via `05-dotfiles-updates.zsh`)
-- Frequency: Configurable via `ZSH_DOTFILES_UPDATE_FREQ` (default: 7 days)
+- Frequency: Configurable via `ZSH_DOTFILES_UPDATE_FREQ` (default: 1 day)
 - Behavior: Can notify or auto-update based on `ZSH_DOTFILES_AUTOUPDATE`
 - Lock file: `.update.lock` prevents concurrent runs
 
