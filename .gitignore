@@ -46,3 +46,6 @@ package-lock.json
 # Dotfiles update state (runtime-only)
 .last_update_check
 .update.lock
+
+# Test artifacts
+tests/tmp/

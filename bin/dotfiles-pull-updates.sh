@@ -1,8 +1,7 @@
 #!/bin/bash
+set -euo pipefail
 # Update dotfiles repo from remote and reload shell config
 # Usage: dotfiles-pull-updates [--check-only]
-
-set -e
 
 # Dynamically determine the dotfiles directory from script location
 # Resolve symlinks to get the actual script location

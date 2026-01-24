@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 # Symlink utility scripts to ~/.local/bin or /usr/local/bin
 # Makes dotfiles-* commands available globally
 
@@ -23,8 +24,8 @@ for script in "$DOTFILES_BIN_DIR"/*.sh; do
     basename=$(basename "$script" .sh)
     link_path="$TARGET_DIR/$basename"
     
-    # Remove old symlink if it exists
-    [[ -L "$link_path" ]] && rm "$link_path"
+    # Remove existing file or symlink if it exists
+    [[ -e "$link_path" || -L "$link_path" ]] && rm -f "$link_path"
     
     # Create new symlink
     ln -s "$script" "$link_path"

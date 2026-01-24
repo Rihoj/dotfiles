@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Fake ps command for testing
+# Logs all invocations to TEST_CALL_LOG
+
+echo "ps $*" >> "${TEST_CALL_LOG:-/dev/null}"
+
+# Parse PID from arguments (expects: ps -o args= -p <PID>)
+for arg in "$@"; do
+  if [[ "$arg" =~ ^[0-9]+$ ]]; then
+    PID="$arg"
+    break
+  fi
+done
+
+# Check if PS_RUNNING_PIDS environment variable contains this PID
+# Format: space-separated list of PIDs that should appear "running"
+if [[ " ${PS_RUNNING_PIDS:-} " == *" $PID "* ]]; then
+  # Simulate process running dotfiles-check-updates
+  echo "bash /path/to/dotfiles-check-updates.sh"
+  exit 0
+else
+  # Simulate process not found or not running this script
+  exit 1
+fi

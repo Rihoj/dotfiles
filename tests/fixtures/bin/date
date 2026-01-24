@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Fake date command for testing
+# Logs all invocations to TEST_CALL_LOG
+
+echo "date $*" >> "${TEST_CALL_LOG:-/dev/null}"
+
+# Return fake timestamp if DATE_TIMESTAMP is set, otherwise use real date
+if [[ -n "${DATE_TIMESTAMP:-}" ]]; then
+  echo "$DATE_TIMESTAMP"
+else
+  # Fall back to real date command
+  command date "$@"
+fi

@@ -51,7 +51,7 @@
 	smudge = git-lfs smudge -- %f
 	process = git-lfs filter-process
 [safe]
-	directory = /var/www/html
+	# Allow git operations in web server document root (often owned by www-data)
 	directory = /var/www/html
 [push]
 	autoSetupRemote = true

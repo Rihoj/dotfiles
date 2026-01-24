@@ -255,7 +255,9 @@ main() {
   detect_privilege_escalation
   
   # Prompt for git configuration early (before long-running tasks)
-  prompt_git_config
+  if [[ $DRY_RUN -eq 0 ]]; then
+    prompt_git_config
+  fi
   
   if [[ $INSTALL_DEPS -eq 0 ]]; then
     need_cmd python3

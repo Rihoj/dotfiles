@@ -356,16 +356,6 @@
       - { name: ".npmrc", dir: "npm", src_name: ".npmrc" }
   tags: config
 
-- name: Stat home version of {{ dotfile.name }}
-  ansible.builtin.stat:
-    path: "{{ ansible_env.HOME }}/{{ dotfile.name }}"
-    follow: false
-  register: home_dotfile_stat
-  loop: "{{ managed_dotfiles }}"
-  loop_control:
-    loop_var: dotfile
-  tags: config
-
 - name: Process each managed dotfile
   ansible.builtin.include_tasks:
     file: dotfile_tasks.yml
@@ -534,8 +524,8 @@
     msg: "Could not change default shell automatically. Run: chsh -s {{ zsh_path.stdout }}"
   when:
     - set_default_shell | bool
-    - chsh_result is defined
-    - chsh_result.failed | default(false)
+    - user_shell_change is defined
+    - user_shell_change.failed | default(false)
     - zsh_path.stdout | length > 0
   tags: shell
 

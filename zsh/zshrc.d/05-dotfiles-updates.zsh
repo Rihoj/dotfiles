@@ -19,5 +19,5 @@ if [[ -z "$DOTFILES_DIR" ]]; then
 fi
 
 if [[ -f "$DOTFILES_DIR/bin/dotfiles-check-updates.sh" ]]; then
-  source "$DOTFILES_DIR/bin/dotfiles-check-updates.sh"
+  [[ -o interactive ]] && command bash "$DOTFILES_DIR/bin/dotfiles-check-updates.sh" >/dev/null 2>&1 &
 fi
