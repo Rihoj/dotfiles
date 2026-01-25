@@ -25,7 +25,13 @@ for script in "$DOTFILES_BIN_DIR"/*.sh; do
     link_path="$TARGET_DIR/$basename"
     
     # Remove existing file or symlink if it exists
-    [[ -e "$link_path" || -L "$link_path" ]] && rm -f "$link_path"
+    if [[ -e "$link_path" || -L "$link_path" ]]; then
+      if [[ ! -w "$link_path" ]]; then
+        echo "⚠️  Skipping $link_path (not writable)" >&2
+        continue
+      fi
+      rm -f "$link_path"
+    fi
     
     # Create new symlink
     ln -s "$script" "$link_path"
