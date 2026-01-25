@@ -43,6 +43,25 @@ if [[ "$1" == "--check-only" ]]; then
   exit 0
 fi
 
+# Require upstream for pull updates
+if ! git rev-parse @{u} >/dev/null 2>&1; then
+  echo "❌ Error: No upstream configured for this repository." >&2
+  exit 1
+fi
+
+# Refuse to pull with local changes
+if [[ -n "$(git status --porcelain)" ]]; then
+  echo "❌ Error: Working tree has local changes. Commit or stash before updating." >&2
+  exit 1
+fi
+
+# Refuse to pull when local commits exist
+AHEAD=$(git rev-list --count @{u}..HEAD 2>/dev/null || echo 0)
+if [[ "$AHEAD" -gt 0 ]]; then
+  echo "❌ Error: Local commits detected ($AHEAD ahead). Push or reset before updating." >&2
+  exit 1
+fi
+
 # Pull updates
 echo "🔄 Pulling dotfiles updates..."
 git fetch --quiet || true
