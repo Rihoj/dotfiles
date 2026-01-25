@@ -25,6 +25,10 @@ cd "$DOTFILES_DIR"
 # Check for changes only
 if [[ "$1" == "--check-only" ]]; then
   echo "Checking for updates..."
+  if ! git rev-parse @{u} >/dev/null 2>&1; then
+    echo "No upstream configured for this repository."
+    exit 0
+  fi
   git fetch --quiet
   
   # Calculate behind/ahead relative to upstream
