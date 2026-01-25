@@ -25,7 +25,7 @@ Tracking issues found during code reviews and their status.
 | CR-013 | Medium | Done | Update check-only upstream | `dotfiles-pull-updates.sh --check-only` assumes an upstream exists; missing `@{u}` can yield misleading output. | bin/dotfiles-pull-updates.sh |
 | CR-014 | Medium | Done | Update pull prechecks | `dotfiles-pull-updates.sh` does not check for local changes or local commits before `git pull --ff-only`, causing a hard failure without clear guidance. | bin/dotfiles-pull-updates.sh |
 | CR-015 | Low | Done | Bin linker failure mode | `dotfiles-link-bin.sh` removes existing targets and `chmod +x` unconditionally; if the target path is unwritable, the script exits due to `set -e` without a helpful message. | bin/dotfiles-link-bin.sh |
-| CR-016 | Low | Open | Hardcoded env paths | `zsh/zshrc.d/30-env.zsh` hardcodes platform-specific paths (e.g., Windows Chrome path, /snap/bin) which may be incorrect outside WSL/Linux. | zsh/zshrc.d/30-env.zsh |
+| CR-016 | Low | Done | Hardcoded env paths | `zsh/zshrc.d/30-env.zsh` hardcodes platform-specific paths (e.g., Windows Chrome path, /snap/bin) which may be incorrect outside WSL/Linux. | zsh/zshrc.d/30-env.zsh |
 
 ## Notes
 
