@@ -11,6 +11,12 @@
       - fonts-powerline
   tags: packages
 
+- name: Fail on unsupported OS families
+  ansible.builtin.fail:
+    msg: "Unsupported OS family: {{ ansible_facts['os_family'] }}. This setup currently supports Debian/Ubuntu only."
+  when: ansible_facts['os_family'] != 'Debian'
+  tags: packages
+
 - name: Check if sudo is available
   ansible.builtin.command: command -v sudo
   register: sudo_check

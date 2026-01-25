@@ -92,6 +92,10 @@ elif command -v zypper >/dev/null 2>&1; then
   pkg_mgr="zypper"
 fi
 
+if [[ "$pkg_mgr" != "apt" ]]; then
+  die "Unsupported OS/package manager. This dotfiles setup currently supports Debian/Ubuntu (apt) only."
+fi
+
 install_packages() {
   local pkgs=(python3 python3-venv python3-pip git curl)
   
