@@ -44,6 +44,8 @@ The dotfiles system includes automatic and manual update mechanisms:
 5. Compares local HEAD with upstream
 6. Either notifies you or auto-updates (based on configuration)
 
+**Note**: `DOTFILES_DIR` is derived from the update hook’s own path when possible, then falls back to a `~/.zshrc` symlink, and finally to `~/.dotfiles`.
+
 ### Configuration
 
 Add these to `~/.zshrc.local`:

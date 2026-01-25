@@ -30,6 +30,7 @@ Quick overview of all available documentation.
 |----------|-------------|--------------|
 | [Troubleshooting Guide](troubleshooting.md) | Fix common issues | Reference |
 | [FAQ](faq.md) | Frequently asked questions | Reference |
+| [Code Review Findings](review-findings.md) | Track review issues and status | Reference |
 
 ## 🎯 Documentation by Use Case
 

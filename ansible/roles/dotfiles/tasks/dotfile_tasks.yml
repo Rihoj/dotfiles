@@ -41,6 +41,17 @@
     path: "{{ dotfiles_dir }}/{{ dotfile_dir }}/{{ dotfile_src }}"
   register: repo_dotfile_stat
 
+- name: Backup existing {{ dotfile_name }} before linking
+  ansible.builtin.copy:
+    src: "{{ ansible_facts.env.HOME }}/{{ dotfile_name }}"
+    dest: "{{ backup_dir }}/{{ dotfile_name | regex_replace('^[.]', '') }}.{{ ansible_facts.date_time.iso8601_basic_short }}"
+    remote_src: true
+    mode: preserve
+  when:
+    - repo_dotfile_stat.stat.exists
+    - home_dotfile_stat.stat.exists
+    - not home_dotfile_stat.stat.islnk
+
 - name: Symlink {{ dotfile_name }} to repo version
   ansible.builtin.file:
     src: "{{ dotfiles_dir }}/{{ dotfile_dir }}/{{ dotfile_src }}"

@@ -42,10 +42,10 @@ else
     
     # Check if process is still running this script
     PROC_CMD="$(ps -o args= -p "$LOCK_PID" 2>/dev/null || echo "")"
-    if [[ "$PROC_CMD" == *"$LOCK_SCRIPT"* ]]; then
+    if [[ -n "$LOCK_SCRIPT" && "$PROC_CMD" == *"$LOCK_SCRIPT"* ]]; then
       # Process running, respect lock
       return 0 2>/dev/null || exit 0
-    elif [[ $LOCK_AGE -gt $LOCK_TIMEOUT ]]; then
+    elif [[ $LOCK_AGE -ge $LOCK_TIMEOUT ]]; then
       # Stale lock (process gone or old), remove and retry
       rm -rf "$LOCK_DIR"
       mkdir "$LOCK_DIR" 2>/dev/null || { return 0 2>/dev/null || exit 0; }
@@ -55,7 +55,8 @@ else
       return 0 2>/dev/null || exit 0
     fi
   else
-    # No info file, bail out
+    # No info file, treat as stale and remove the lock
+    rm -rf "$LOCK_DIR"
     return 0 2>/dev/null || exit 0
   fi
 fi
