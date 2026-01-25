@@ -26,6 +26,10 @@ for script in "$DOTFILES_BIN_DIR"/*.sh; do
     
     # Remove existing file or symlink if it exists
     if [[ -e "$link_path" || -L "$link_path" ]]; then
+      if [[ -d "$link_path" ]]; then
+        echo "⚠️  Skipping $link_path (directory exists)" >&2
+        continue
+      fi
       if [[ ! -w "$link_path" ]]; then
         echo "⚠️  Skipping $link_path (not writable)" >&2
         continue
