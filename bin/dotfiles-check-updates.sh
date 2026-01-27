@@ -84,8 +84,32 @@ if ! git rev-parse @{u} >/dev/null 2>&1; then
   return 0 2>/dev/null || exit 0
 fi
 
-# Quietly fetch upstream
-git fetch --quiet 2>/dev/null || { return 0 2>/dev/null || exit 0; }
+# Optionally rewrite SSH remotes to HTTPS for public repos
+if [[ "${ZSH_DOTFILES_AUTOHTTPS:-false}" == "true" ]]; then
+  upstream_ref="$(git rev-parse --abbrev-ref @{u} 2>/dev/null || true)"
+  upstream_remote="${upstream_ref%%/*}"
+  if [[ -n "$upstream_remote" ]]; then
+    remote_url="$(git remote get-url "$upstream_remote" 2>/dev/null || true)"
+    case "$remote_url" in
+      git@github.com:*|ssh://git@github.com/*)
+        path="${remote_url#git@github.com:}"
+        path="${path#ssh://git@github.com/}"
+        path="${path%.git}"
+        git remote set-url "$upstream_remote" "https://github.com/${path}.git" 2>/dev/null || true
+        ;;
+      git@gitlab.com:*|ssh://git@gitlab.com/*)
+        path="${remote_url#git@gitlab.com:}"
+        path="${path#ssh://git@gitlab.com/}"
+        path="${path%.git}"
+        git remote set-url "$upstream_remote" "https://gitlab.com/${path}.git" 2>/dev/null || true
+        ;;
+    esac
+  fi
+fi
+
+# Quietly fetch upstream without prompting for SSH passphrases
+GIT_SSH_COMMAND="ssh -o BatchMode=yes" GIT_TERMINAL_PROMPT=0 \
+  git fetch --quiet 2>/dev/null || { return 0 2>/dev/null || exit 0; }
 
 # Update timestamp after successful fetch
 echo "$CURRENT_TIME" > "$LAST_UPDATE_FILE" 2>/dev/null || true
@@ -96,7 +120,8 @@ BEHIND=$(git rev-list --count HEAD..@{u} 2>/dev/null || echo 0)
 if [[ "$BEHIND" -gt 0 ]]; then
   if [[ "$AUTOUPDATE" == "true" ]]; then
     # Auto-update in background, do not block shell startup
-    "$DOTFILES_DIR/bin/dotfiles-pull-updates.sh" >/dev/null 2>&1 &
+    GIT_SSH_COMMAND="ssh -o BatchMode=yes" GIT_TERMINAL_PROMPT=0 \
+      "$DOTFILES_DIR/bin/dotfiles-pull-updates.sh" >/dev/null 2>&1 &
   elif [[ $- == *i* ]]; then
     # Offer to run the update for the user with a short timeout
     echo ""

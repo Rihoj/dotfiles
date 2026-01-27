@@ -90,7 +90,7 @@ dotfiles-check-updates.sh
 - Can notify or auto-update based on configuration
 - Uses lock file to prevent concurrent runs
 
-#### Configuration (in `~/.zshrc.local`)
+#### Configuration (in `~/.zshenv.local` for same-session effect)
 
 ```zsh
 # Check frequency in days (default: 1)
@@ -98,6 +98,9 @@ export ZSH_DOTFILES_UPDATE_FREQ=1
 
 # Auto-update when behind (default: true)
 export ZSH_DOTFILES_AUTOUPDATE=true
+
+# Rewrite SSH remotes to HTTPS (default: false)
+export ZSH_DOTFILES_AUTOHTTPS=false
 ```
 
 #### Behavior
@@ -596,6 +599,7 @@ p10k configure                  # Configure theme
 | `DOTFILES_DIR` | Dotfiles repository location | Auto-detected from script location, or `~/.dotfiles` |
 | `ZSH_DOTFILES_UPDATE_FREQ` | Update check frequency (days) | `1` |
 | `ZSH_DOTFILES_AUTOUPDATE` | Auto-pull updates | `true` |
+| `ZSH_DOTFILES_AUTOHTTPS` | Rewrite SSH remotes to HTTPS | `false` |
 
 ### Oh My Zsh
 

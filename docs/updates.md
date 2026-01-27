@@ -48,7 +48,9 @@ The dotfiles system includes automatic and manual update mechanisms:
 
 ### Configuration
 
-Add these to `~/.zshrc.local`:
+Add these to `~/.zshenv.local` if you want them to affect the update check
+on the same shell startup. `~/.zshrc.local` loads after modules, so changes
+there take effect on the next shell session.
 
 ```zsh
 # How often to check (in days)
@@ -56,6 +58,9 @@ export ZSH_DOTFILES_UPDATE_FREQ=1  # Default: 1 day
 
 # Auto-update when behind
 export ZSH_DOTFILES_AUTOUPDATE=true  # Default: true
+
+# Switch SSH remotes to HTTPS (public repos)
+export ZSH_DOTFILES_AUTOHTTPS=false  # Default: false
 ```
 
 ### Update Frequencies

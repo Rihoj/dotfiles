@@ -38,6 +38,7 @@ Welcome to the comprehensive documentation for this dotfiles management system. 
 - **First Installation**: See [Quick Start Guide](getting-started.md)
 - **Add Custom Aliases**: Edit `zsh/zshrc.d/10-aliases.zsh`
 - **Add Machine-Specific Config**: Use `~/.zshrc.local` (never tracked by git)
+- **Add Early Env Overrides**: Use `~/.zshenv.local` (loaded before modules)
 - **Update Dotfiles**: Run `dotfiles-pull-updates.sh` or let auto-update handle it
 - **Rollback Changes**: See [Backup & Recovery](backup-recovery.md)
 

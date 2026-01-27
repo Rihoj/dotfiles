@@ -1,7 +1,6 @@
 # Dotfiles auto-update check (similar to OMZ)
 # Checks for updates every N days (default: 1)
 # Customize with: export ZSH_DOTFILES_UPDATE_FREQ=7
-
 # Set DOTFILES_DIR if not already set
 # This is typically ~/.dotfiles when properly installed
 if [[ -z "$DOTFILES_DIR" ]]; then

@@ -12,6 +12,7 @@ Learn how to customize your dotfiles to match your workflow.
 | Key bindings | `zsh/zshrc.d/20-keybindings.zsh` | ✅ Yes |
 | Git global config | `git/.gitconfig` | ✅ Yes |
 | Git user identity | `~/.gitconfig.local` | ❌ No |
+| Early env overrides | `~/.zshenv.local` | ❌ No |
 | Machine-specific config | `~/.zshrc.local` | ❌ No |
 | API keys / secrets | `~/.zshrc.local` | ❌ No |
 | Work vs personal differences | `~/.zshrc.local` | ❌ No |
@@ -23,9 +24,11 @@ Your shell configuration is loaded in layers:
 ```
 1. Oh My Zsh (framework)
    ↓
-2. Repository modules (zsh/zshrc.d/*.zsh)
+2. Early local env (~/.zshenv.local)
    ↓
-3. Your local overrides (~/.zshrc.local)
+3. Repository modules (zsh/zshrc.d/*.zsh)
+   ↓
+4. Your local overrides (~/.zshrc.local)
 ```
 
 ### Layer 1: Oh My Zsh Framework
@@ -48,11 +51,16 @@ plugins=(
 source $ZSH/oh-my-zsh.sh
 ```
 
-### Layer 2: Repository Modules
+### Layer 2: Early Local Env
+
+`~/.zshenv.local` is sourced before modules for variables that must be set
+before initialization (like update settings).
+
+### Layer 3: Repository Modules
 
 Files in `zsh/zshrc.d/` are sourced automatically in numeric order.
 
-### Layer 3: Local Overrides
+### Layer 4: Local Overrides
 
 `~/.zshrc.local` is sourced last and never tracked in git. Perfect for:
 - Machine-specific paths

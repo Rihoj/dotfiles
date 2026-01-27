@@ -40,6 +40,7 @@ The bootstrap will prompt you for your git identity (name, email, GPG key) at th
 - **Repo files**: All files in this repo are the canonical source of truth
 - **~/.zshrc**: Symlinked to repo. Overwritten on every run.
 - **~/.zshrc.local**: Created once from template. NEVER touched again. This is YOUR file.
+- **~/.zshenv.local**: Optional early env overrides (loaded before modules).
 - **~/.gitconfig**: Symlinked to repo. Contains global git settings.
 - **~/.gitconfig.local**: Created by setup script. NEVER touched again. Contains your git identity.
 
@@ -58,6 +59,7 @@ Requirements:
 
 - **Repo owns**: .zshrc, all zsh modules, aliases, environment setup, .gitconfig (global git settings)
 - **You own**: ~/.zshrc.local for machine-specific config, secrets, local paths
+- **You own**: ~/.zshenv.local for early env vars that must load before modules
 - **You own**: ~/.gitconfig.local for your git identity (name, email, GPG key)
 
 ## Safety Features
@@ -126,6 +128,7 @@ These scripts help keep your dotfiles up to date across machines and make comman
 - **[bin/dotfiles-check-updates.sh](bin/dotfiles-check-updates.sh):** Auto-checks for repo updates on shell startup, every N days.
     - Env: `ZSH_DOTFILES_UPDATE_FREQ` (default: 1)
     - Env: `ZSH_DOTFILES_AUTOUPDATE` (default: true)
+    - Env: `ZSH_DOTFILES_AUTOHTTPS` (default: false) rewrites SSH remotes to HTTPS
     - Loaded by [zsh/zshrc.d/05-dotfiles-updates.zsh](zsh/zshrc.d/05-dotfiles-updates.zsh)
 
 - **[bin/dotfiles-pull-updates.sh](bin/dotfiles-pull-updates.sh):** Manual updater.

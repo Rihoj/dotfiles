@@ -100,6 +100,14 @@ You have **complete ownership** over:
 - ✅ Not tracked in git
 - ✅ Your permanent customization space
 
+#### 1a. Early Env Overrides (Optional)
+
+```bash
+~/.zshenv.local
+```
+
+**Use for** variables that must be set before any modules load (e.g., update settings).
+
 #### 2. Local Overrides
 
 Any settings in `~/.zshrc.local` override repo settings because it loads last:

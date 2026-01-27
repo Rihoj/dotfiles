@@ -211,6 +211,7 @@ If behind → Notify or auto-update
 **Configuration**:
 - `ZSH_DOTFILES_UPDATE_FREQ`: Days between checks (default: 1)
 - `ZSH_DOTFILES_AUTOUPDATE`: Auto-pull or just notify (default: true)
+- `ZSH_DOTFILES_AUTOHTTPS`: Rewrite SSH remotes to HTTPS (default: false)
 
 ## Data Flow
 

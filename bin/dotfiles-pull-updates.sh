@@ -29,7 +29,9 @@ if [[ "$1" == "--check-only" ]]; then
     echo "No upstream configured for this repository."
     exit 0
   fi
-  git fetch --quiet
+  # Avoid SSH passphrase prompts in check mode
+  GIT_SSH_COMMAND="ssh -o BatchMode=yes" GIT_TERMINAL_PROMPT=0 \
+    git fetch --quiet
   
   # Calculate behind/ahead relative to upstream
   BEHIND=$(git rev-list --count HEAD..@{u} 2>/dev/null || echo 0)
@@ -47,6 +49,29 @@ fi
 if ! git rev-parse @{u} >/dev/null 2>&1; then
   echo "❌ Error: No upstream configured for this repository." >&2
   exit 1
+fi
+
+# Optionally rewrite SSH remotes to HTTPS for public repos
+if [[ "${ZSH_DOTFILES_AUTOHTTPS:-false}" == "true" ]]; then
+  upstream_ref="$(git rev-parse --abbrev-ref @{u} 2>/dev/null || true)"
+  upstream_remote="${upstream_ref%%/*}"
+  if [[ -n "$upstream_remote" ]]; then
+    remote_url="$(git remote get-url "$upstream_remote" 2>/dev/null || true)"
+    case "$remote_url" in
+      git@github.com:*|ssh://git@github.com/*)
+        path="${remote_url#git@github.com:}"
+        path="${path#ssh://git@github.com/}"
+        path="${path%.git}"
+        git remote set-url "$upstream_remote" "https://github.com/${path}.git" 2>/dev/null || true
+        ;;
+      git@gitlab.com:*|ssh://git@gitlab.com/*)
+        path="${remote_url#git@gitlab.com:}"
+        path="${path#ssh://git@gitlab.com/}"
+        path="${path%.git}"
+        git remote set-url "$upstream_remote" "https://gitlab.com/${path}.git" 2>/dev/null || true
+        ;;
+    esac
+  fi
 fi
 
 # Refuse to pull with local changes

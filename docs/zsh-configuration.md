@@ -9,6 +9,9 @@ Comprehensive guide to Zsh configuration in this dotfiles system.
 ```
 ~/.zshrc (or sourcing mechanism)
     │
+    ├─ Source: zsh/zshrc.d/00-local-env.zsh
+    │   └─ Source early env overrides (~/.zshenv.local)
+    │
     ├─ Source: zsh/zshrc.d/00-omz.zsh
     │   └─ Initialize Oh My Zsh framework
     │
@@ -44,6 +47,7 @@ for config_file in ~/.dotfiles/zsh/zshrc.d/*.zsh; do
     source "$config_file"
 done
 
+# The 00-local-env module sources ~/.zshenv.local early.
 # Load user overrides last
 [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
 ```

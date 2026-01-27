@@ -28,6 +28,7 @@ Behavior specification for `dotfiles-check-updates.sh` to ensure consistent upda
 | `DOTFILES_DIR` | Script location's parent dir | Root directory of dotfiles repo |
 | `ZSH_DOTFILES_UPDATE_FREQ` | 1 | Days between update checks |
 | `ZSH_DOTFILES_AUTOUPDATE` | true | Auto-update when behind |
+| `ZSH_DOTFILES_AUTOHTTPS` | false | Rewrite SSH remotes to HTTPS |
 
 ## Lock Mechanism
 

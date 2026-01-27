@@ -72,6 +72,7 @@ bin/
 - Triggered: On shell startup (via `05-dotfiles-updates.zsh`)
 - Frequency: Configurable via `ZSH_DOTFILES_UPDATE_FREQ` (default: 1 day)
 - Behavior: Can notify or auto-update based on `ZSH_DOTFILES_AUTOUPDATE`
+- Remote: Can rewrite SSH to HTTPS with `ZSH_DOTFILES_AUTOHTTPS`
 - Lock file: `.update.lock` prevents concurrent runs
 
 **`dotfiles-link-bin.sh`**
