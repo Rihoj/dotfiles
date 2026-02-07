@@ -195,7 +195,10 @@
       fi
 
       # Load modular configuration files
-      for f in "{{ dotfiles_dir }}/zsh/zshrc.d"/*.zsh(N); do
+      this_file="${(%):-%N}"
+      this_real="${this_file:A}"
+      DOTFILES_DIR="${DOTFILES_DIR:-${this_real:h:h}}"
+      for f in "${DOTFILES_DIR}/zsh/zshrc.d"/*.zsh(N); do
         [[ -r "$f" ]] && source "$f"
       done
 
