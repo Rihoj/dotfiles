@@ -1,0 +1,4 @@
+interface:
+  display_name: "Security"
+  short_description: "Threat modeling and vulnerability assessment"
+  default_prompt: "Review this design for security risks."

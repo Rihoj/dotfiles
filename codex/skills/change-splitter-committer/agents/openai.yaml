@@ -1,0 +1,4 @@
+interface:
+  display_name: "Change Splitter"
+  short_description: "Split changes into clean commits"
+  default_prompt: "Plan and create clean conventional commits."

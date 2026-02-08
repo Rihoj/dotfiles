@@ -1,0 +1,4 @@
+interface:
+  display_name: "QA/Test"
+  short_description: "Test strategy and edge-case coverage"
+  default_prompt: "Create a test plan for this change."

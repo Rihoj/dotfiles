@@ -1,0 +1,4 @@
+interface:
+  display_name: "Tech Lead"
+  short_description: "Implementation planning and risk analysis"
+  default_prompt: "Create an implementation plan for this request."

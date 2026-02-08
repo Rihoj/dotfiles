@@ -1,0 +1,4 @@
+interface:
+  display_name: "Incident Commander"
+  short_description: "Incident triage and coordination"
+  default_prompt: "Coordinate this incident response."

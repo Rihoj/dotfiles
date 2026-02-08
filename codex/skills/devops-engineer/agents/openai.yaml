@@ -1,0 +1,4 @@
+interface:
+  display_name: "DevOps Engineer"
+  short_description: "Design CI/CD pipelines and IaC automation"
+  default_prompt: "Design a CI/CD pipeline for this repo."

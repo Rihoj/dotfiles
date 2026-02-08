@@ -1,0 +1,4 @@
+interface:
+  display_name: "Compliance Engineer"
+  short_description: "Regulatory compliance and audit checks"
+  default_prompt: "Assess compliance gaps for this system."

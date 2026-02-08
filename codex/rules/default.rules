@@ -1,0 +1,8 @@
+prefix_rule(pattern=["docker", "compose", "logs", "caddy-metrics", "--tail", "50"], decision="allow")
+prefix_rule(pattern=["/usr/bin/zsh", "-lc", "docker compose exec caddy-metrics apk add --no-cache curl >/dev/null && docker compose exec caddy-metrics sh -lc 'echo \"AUTH TEST\"; curl -sS -o /dev/null -w \"%{http_code}\\n\" -u \"$CADDY_METRICS_USER:$CADDY_METRICS_PASSWORD\" http://127.0.0.1:9200/metrics; echo \"UPSTREAM TEST\"; curl -sS -o /dev/null -w \"%{http_code}\\n\" -H \"Host: localhost\" http://127.0.0.1:2019/metrics'"], decision="allow")
+prefix_rule(pattern=["docker", "compose", "exec", "caddy-metrics", "sh", "-lc", "curl -sS -i -H \"Host: localhost\" http://127.0.0.1:2019/metrics | head -n 20"], decision="allow")
+prefix_rule(pattern=["go", "test", "./internal/actions/strategy"], decision="allow")
+prefix_rule(pattern=["go", "generate", "./internal/config"], decision="allow")
+prefix_rule(pattern=["go", "generate", "./internal/config"], decision="allow")
+prefix_rule(pattern=["go", "test", "./internal/actions/install"], decision="allow")
+prefix_rule(pattern=["go", "test"], decision="allow")

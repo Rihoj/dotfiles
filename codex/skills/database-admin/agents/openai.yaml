@@ -1,0 +1,4 @@
+interface:
+  display_name: "Database Admin"
+  short_description: "Query tuning and schema guidance"
+  default_prompt: "Analyze this query or schema and recommend improvements."

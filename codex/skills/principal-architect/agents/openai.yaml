@@ -1,0 +1,4 @@
+interface:
+  display_name: "Principal Architect"
+  short_description: "Architecture decisions and ADRs"
+  default_prompt: "Evaluate architecture options and produce an ADR."

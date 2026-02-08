@@ -1,0 +1,4 @@
+interface:
+  display_name: "Memory Agent"
+  short_description: "Maintain project memory files"
+  default_prompt: "Update project memory with this change."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Performance Engineer"
+  short_description: "Profiling and optimization guidance"
+  default_prompt: "Find performance bottlenecks and propose fixes."

@@ -1,1 +1,32 @@
+model = "gpt-5.2-codex"
+model_reasoning_effort = "medium"
 personality = "pragmatic"
+
+[projects."/home/jray/code/Stellar-Dominion-Game"]
+trust_level = "trusted"
+
+#[mcp_servers.github]
+# HTTP transport (may require a recent Codex build)
+#transport = "http"
+#url = "https://api.githubcopilot.com/mcp/"
+
+[mcp_servers.terraform]
+# stdio via Docker
+command = "docker"
+args = ["run", "-i", "--rm", "hashicorp/terraform-mcp-server"]
+
+#[mcp_servers.MCP_DOCKER]
+# stdio via Docker (verify you actually intend `docker mcp gateway run`)
+#command = "docker"
+#args = ["mcp", "gateway", "run"]
+[mcp_servers.MCP_DOCKER]
+command = "/mnt/c/Program Files/Docker/Docker/resources/bin/docker.exe"
+args = ["--context", "desktop-linux", "mcp", "gateway", "run"]
+type = "stdio"
+
+
+[mcp_servers.awesome-copilot]
+# stdio via Docker
+command = "docker"
+args = ["run", "-i", "--rm", "ghcr.io/microsoft/mcp-dotnet-samples/awesome-copilot:latest"]
+

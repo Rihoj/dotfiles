@@ -1,0 +1,4 @@
+interface:
+  display_name: "Hook Builder"
+  short_description: "Create Copilot lifecycle hooks"
+  default_prompt: "Design a Copilot hook for this requirement."

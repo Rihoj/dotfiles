@@ -1,0 +1,4 @@
+interface:
+  display_name: "Instruction Builder"
+  short_description: "Create Copilot instruction files"
+  default_prompt: "Design instructions for this repo."

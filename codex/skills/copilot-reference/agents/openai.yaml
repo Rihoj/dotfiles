@@ -1,0 +1,4 @@
+interface:
+  display_name: "Copilot Reference"
+  short_description: "Legacy Copilot prompt library"
+  default_prompt: "Find a Copilot prompt to adapt."

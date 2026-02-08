@@ -1,0 +1,4 @@
+interface:
+  display_name: "SRE"
+  short_description: "Reliability, SLOs, observability, runbooks"
+  default_prompt: "Define SLOs and an observability plan for this service."

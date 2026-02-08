@@ -1,0 +1,4 @@
+interface:
+  display_name: "Release Manager"
+  short_description: "Release planning and rollback guidance"
+  default_prompt: "Plan this release and outline rollback criteria."

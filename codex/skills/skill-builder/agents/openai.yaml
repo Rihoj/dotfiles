@@ -1,0 +1,4 @@
+interface:
+  display_name: "Skill Builder"
+  short_description: "Design reusable Codex skills"
+  default_prompt: "Create a skill for this task."

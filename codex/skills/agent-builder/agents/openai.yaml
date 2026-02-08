@@ -1,0 +1,4 @@
+interface:
+  display_name: "Agent Builder"
+  short_description: "Design custom agent configurations"
+  default_prompt: "Design a custom agent for this workflow."
