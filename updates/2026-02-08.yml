@@ -1,0 +1,5 @@
+requires_bootstrap: true
+requires_deps: false
+requires_chsh: false
+ansible_tags: [codex]
+note: "re-add codex subpath symlinks"

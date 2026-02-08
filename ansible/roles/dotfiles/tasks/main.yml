@@ -415,6 +415,194 @@
     - config
     - npm
 
+# Codex directory management (~/.codex)
+- name: Ensure codex directory exists in repo
+  ansible.builtin.file:
+    path: "{{ dotfiles_dir }}/codex"
+    state: directory
+    mode: "0755"
+  tags:
+    - config
+    - codex
+
+- name: Stat home .codex
+  ansible.builtin.stat:
+    path: "{{ ansible_env.HOME }}/.codex"
+    follow: false
+  register: home_codex_stat
+  tags:
+    - config
+    - codex
+
+- name: Remove existing .codex symlink so subpaths can be linked
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.codex"
+    state: absent
+  when:
+    - home_codex_stat.stat.exists
+    - home_codex_stat.stat.islnk
+  tags:
+    - config
+    - codex
+
+- name: Ensure home .codex directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.codex"
+    state: directory
+    mode: "0700"
+  tags:
+    - config
+    - codex
+
+- name: Define managed .codex items
+  ansible.builtin.set_fact:
+    codex_managed_items:
+      - ".personality_migration"
+      - "config.toml"
+      - "rules"
+      - "skills"
+      - "version.json"
+  tags:
+    - config
+    - codex
+
+- name: Ensure .codex backup directory exists (if migrating)
+  ansible.builtin.file:
+    path: "{{ backup_dir }}/codex.{{ ansible_facts.date_time.iso8601_basic_short }}"
+    state: directory
+    mode: "0700"
+  when:
+    - migrate_existing_dotfiles | default(false) | bool
+    - home_codex_stat.stat.exists
+    - not home_codex_stat.stat.islnk
+  tags:
+    - config
+    - codex
+
+- name: Stat .codex items for migration
+  ansible.builtin.stat:
+    path: "{{ ansible_env.HOME }}/.codex/{{ item }}"
+    follow: false
+  loop: "{{ codex_managed_items }}"
+  register: codex_migrate_stats
+  when:
+    - migrate_existing_dotfiles | default(false) | bool
+    - home_codex_stat.stat.exists
+    - not home_codex_stat.stat.islnk
+  tags:
+    - config
+    - codex
+
+- name: Copy selected .codex items to repo (if migrating)
+  ansible.builtin.copy:
+    src: "{{ ansible_env.HOME }}/.codex/{{ item.item }}"
+    dest: "{{ dotfiles_dir }}/codex/{{ item.item }}"
+    remote_src: true
+    mode: preserve
+  loop: "{{ codex_migrate_stats.results | default([]) }}"
+  when:
+    - migrate_existing_dotfiles | default(false) | bool
+    - item.stat.exists
+  tags:
+    - config
+    - codex
+
+- name: Backup selected .codex items (if migrating)
+  ansible.builtin.copy:
+    src: "{{ ansible_env.HOME }}/.codex/{{ item.item }}"
+    dest: "{{ backup_dir }}/codex.{{ ansible_facts.date_time.iso8601_basic_short }}/{{ item.item }}"
+    remote_src: true
+    mode: preserve
+  loop: "{{ codex_migrate_stats.results | default([]) }}"
+  when:
+    - migrate_existing_dotfiles | default(false) | bool
+    - item.stat.exists
+  tags:
+    - config
+    - codex
+
+- name: Stat repo .codex managed items
+  ansible.builtin.stat:
+    path: "{{ dotfiles_dir }}/codex/{{ item }}"
+    follow: false
+  loop: "{{ codex_managed_items }}"
+  register: codex_repo_stats
+  tags:
+    - config
+    - codex
+
+- name: Stat home .codex managed items
+  ansible.builtin.stat:
+    path: "{{ ansible_env.HOME }}/.codex/{{ item }}"
+    follow: false
+  loop: "{{ codex_managed_items }}"
+  register: codex_home_stats
+  tags:
+    - config
+    - codex
+
+- name: Ensure .codex backup directory exists (if linking without migration)
+  ansible.builtin.file:
+    path: "{{ backup_dir }}/codex.{{ ansible_facts.date_time.iso8601_basic_short }}"
+    state: directory
+    mode: "0700"
+  when:
+    - not (migrate_existing_dotfiles | default(false) | bool)
+    - codex_home_stats.results | selectattr('stat.exists', 'equalto', true) | list | length > 0
+  tags:
+    - config
+    - codex
+
+- name: Backup existing .codex managed items before linking (non-migration)
+  ansible.builtin.copy:
+    src: "{{ ansible_env.HOME }}/.codex/{{ item.item }}"
+    dest: "{{ backup_dir }}/codex.{{ ansible_facts.date_time.iso8601_basic_short }}/{{ item.item }}"
+    remote_src: true
+    mode: preserve
+  loop: "{{ codex_home_stats.results | default([]) }}"
+  when:
+    - not (migrate_existing_dotfiles | default(false) | bool)
+    - item.stat.exists
+    - not item.stat.islnk
+  tags:
+    - config
+    - codex
+
+- name: Remove existing .codex managed items before linking
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.codex/{{ item.item }}"
+    state: absent
+  loop: "{{ codex_home_stats.results | default([]) }}"
+  when:
+    - item.stat.exists
+    - not item.stat.islnk
+  tags:
+    - config
+    - codex
+
+- name: Symlink managed .codex items to repo
+  ansible.builtin.file:
+    src: "{{ dotfiles_dir }}/codex/{{ item.item }}"
+    dest: "{{ ansible_env.HOME }}/.codex/{{ item.item }}"
+    state: link
+    force: true
+    follow: false
+  loop: "{{ codex_repo_stats.results | default([]) }}"
+  when: item.stat.exists
+  tags:
+    - config
+    - codex
+
+- name: Note on .codex
+  ansible.builtin.debug:
+    msg:
+      - ".codex: Managed subpaths symlinked to {{ dotfiles_dir }}/codex"
+      - "To manage it, edit: {{ dotfiles_dir }}/codex then git commit"
+  when: codex_repo_stats.results | default([]) | length > 0
+  tags:
+    - config
+    - codex
+
 # Oh My Zsh installation
 - name: Check if zsh is available
   ansible.builtin.shell: command -v zsh
