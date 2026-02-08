@@ -143,7 +143,11 @@ if [[ "$any_marker" == "true" ]]; then
     do_bootstrap=true
   fi
 else
-  do_bootstrap=true
+  if [[ -n "$OLD_HEAD" && -n "$NEW_HEAD" && "$OLD_HEAD" == "$NEW_HEAD" ]]; then
+    do_bootstrap=false
+  else
+    do_bootstrap=true
+  fi
 fi
 
 # Provision after pull
@@ -151,6 +155,14 @@ PROVISION_INSTALL_DEPS="${DOTFILES_PROVISION_INSTALL_DEPS:-true}"
 PROVISION_CHSH="${DOTFILES_PROVISION_CHSH:-false}"
 bootstrap_args=()
 if [[ "$do_bootstrap" == "true" ]]; then
+  if [[ "$any_marker" == "true" ]]; then
+    if [[ -z "${DOTFILES_PROVISION_INSTALL_DEPS+x}" ]]; then
+      PROVISION_INSTALL_DEPS=false
+    fi
+    if [[ -z "${DOTFILES_PROVISION_CHSH+x}" ]]; then
+      PROVISION_CHSH=false
+    fi
+  fi
   ansible_tags=""
   if [[ ${#ansible_tag_set[@]} -gt 0 ]]; then
     for tag in "${!ansible_tag_set[@]}"; do

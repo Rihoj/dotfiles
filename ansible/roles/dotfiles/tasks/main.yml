@@ -219,7 +219,6 @@
       [[ -f "$HOME/.zshrc.local" ]] && source "$HOME/.zshrc.local"
     dest: "{{ dotfiles_dir }}/zsh/.zshrc"
     mode: "0644"
-  tags: config
   tags:
     - config
     - zsh
