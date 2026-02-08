@@ -27,7 +27,8 @@ fi
 if [[ -f "$DOTFILES_DIR/bin/dotfiles-check-updates.sh" ]]; then
   if [[ -o interactive ]]; then
     if [[ "${ZSH_DOTFILES_AUTOUPDATE:-true}" == "true" ]]; then
-      command bash "$DOTFILES_DIR/bin/dotfiles-check-updates.sh" >/dev/null 2>&1 &
+      # Run quietly and disown to avoid job-complete notifications in prompt
+      command bash "$DOTFILES_DIR/bin/dotfiles-check-updates.sh" >/dev/null 2>&1 &!
     else
       # Allow non-interactive notice output when autoupdate is disabled.
       command bash "$DOTFILES_DIR/bin/dotfiles-check-updates.sh"
