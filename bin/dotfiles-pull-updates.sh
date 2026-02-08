@@ -89,8 +89,103 @@ fi
 
 # Pull updates
 echo "🔄 Pulling dotfiles updates..."
+OLD_HEAD="$(git rev-parse HEAD 2>/dev/null || echo "")"
 git fetch --quiet || true
 git pull --ff-only
+NEW_HEAD="$(git rev-parse HEAD 2>/dev/null || echo "")"
+
+update_markers=()
+if [[ -n "$OLD_HEAD" && -n "$NEW_HEAD" ]]; then
+  while IFS= read -r marker; do
+    [[ -n "$marker" ]] && update_markers+=("$marker")
+  done < <(git diff --name-only "$OLD_HEAD..$NEW_HEAD" -- updates/ 2>/dev/null || true)
+fi
+
+any_marker=false
+require_bootstrap=false
+require_bootstrap_false=false
+require_deps=false
+require_chsh=false
+declare -A ansible_tag_set=()
+
+for marker in "${update_markers[@]}"; do
+  [[ -f "$marker" ]] || continue
+  any_marker=true
+  rb="$(awk -F: '/^[[:space:]]*requires_bootstrap:/ {gsub(/[[:space:]]/,"",$2); print $2; exit}' "$marker" || true)"
+  rd="$(awk -F: '/^[[:space:]]*requires_deps:/ {gsub(/[[:space:]]/,"",$2); print $2; exit}' "$marker" || true)"
+  rc="$(awk -F: '/^[[:space:]]*requires_chsh:/ {gsub(/[[:space:]]/,"",$2); print $2; exit}' "$marker" || true)"
+  at="$(awk -F: '/^[[:space:]]*ansible_tags:/ {sub(/^[[:space:]]*ansible_tags:[[:space:]]*/,""); print; exit}' "$marker" || true)"
+  if [[ "$rb" == "true" ]]; then
+    require_bootstrap=true
+  elif [[ "$rb" == "false" ]]; then
+    require_bootstrap_false=true
+  fi
+  [[ "$rd" == "true" ]] && require_deps=true
+  [[ "$rc" == "true" ]] && require_chsh=true
+  if [[ -n "${at:-}" ]]; then
+    at="${at//[/}"
+    at="${at//]/}"
+    at="${at//,/ }"
+    at="${at//\"/}"
+    at="${at//\'/}"
+    for tag in $at; do
+      [[ -n "$tag" ]] && ansible_tag_set["$tag"]=1
+    done
+  fi
+done
+
+if [[ "$any_marker" == "true" ]]; then
+  if [[ "$require_bootstrap" == "true" ]]; then
+    do_bootstrap=true
+  elif [[ "$require_bootstrap_false" == "true" ]]; then
+    do_bootstrap=false
+  else
+    do_bootstrap=true
+  fi
+else
+  do_bootstrap=true
+fi
+
+# Provision after pull
+PROVISION_INSTALL_DEPS="${DOTFILES_PROVISION_INSTALL_DEPS:-true}"
+PROVISION_CHSH="${DOTFILES_PROVISION_CHSH:-false}"
+bootstrap_args=()
+if [[ "$do_bootstrap" == "true" ]]; then
+  ansible_tags=""
+  if [[ ${#ansible_tag_set[@]} -gt 0 ]]; then
+    for tag in "${!ansible_tag_set[@]}"; do
+      if [[ -z "$ansible_tags" ]]; then
+        ansible_tags="$tag"
+      else
+        ansible_tags="${ansible_tags},${tag}"
+      fi
+    done
+    bootstrap_args+=(--tags "$ansible_tags")
+  fi
+  if [[ "$require_deps" == "true" ]]; then
+    PROVISION_INSTALL_DEPS=true
+  fi
+  if [[ "$require_chsh" == "true" ]]; then
+    PROVISION_CHSH=true
+  fi
+  if [[ "${DOTFILES_UPDATE_CONTEXT:-manual}" == "auto" && ( "$require_deps" == "true" || "$require_chsh" == "true" ) ]]; then
+    msg="Provisioning requires manual run (deps/chsh needed). Run: dotfiles-pull-updates"
+    echo "⚠️  $msg" >&2
+    echo "$msg" > "$DOTFILES_DIR/.provision_required" 2>/dev/null || true
+  else
+    if [[ "$PROVISION_INSTALL_DEPS" != "true" ]]; then
+      bootstrap_args+=(--no-install-deps)
+    fi
+    if [[ "$PROVISION_CHSH" != "true" ]]; then
+      bootstrap_args+=(--no-chsh)
+    fi
+    echo "🛠️  Provisioning dotfiles via bootstrap.sh (install_deps=${PROVISION_INSTALL_DEPS}, chsh=${PROVISION_CHSH})..."
+    "$DOTFILES_DIR/bootstrap.sh" "${bootstrap_args[@]}"
+    rm -f "$DOTFILES_DIR/.provision_required" 2>/dev/null || true
+  fi
+else
+  echo "ℹ️  Skipping bootstrap: no update marker required provisioning."
+fi
 
 echo "✅ Dotfiles updated successfully!"
 echo "💡 Reload your shell to apply changes: exec zsh"

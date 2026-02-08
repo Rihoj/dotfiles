@@ -7,13 +7,14 @@ set -euo pipefail
 
 usage() {
   cat <<'EOF'
-Usage: bootstrap.sh [--repo URL] [--no-install-deps] [--no-chsh] [--dry-run]
+Usage: bootstrap.sh [--repo URL] [--no-install-deps] [--no-chsh] [--dry-run] [--tags TAGS]
 
 Options:
   --repo URL          Dotfiles git repository to clone
   --no-install-deps   Skip installing system dependencies
   --no-chsh           Do not attempt to change the default shell
   --dry-run           Show what would be done without making changes
+  --tags TAGS         Run only specific Ansible tags (comma-separated)
   -h, --help          Show this help
 EOF
 }
@@ -22,6 +23,7 @@ DOTFILES_REPO=""
 INSTALL_DEPS=1
 SET_DEFAULT_SHELL=1
 DRY_RUN=0
+ANSIBLE_TAGS=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -41,6 +43,11 @@ while [[ $# -gt 0 ]]; do
     --dry-run)
       DRY_RUN=1
       shift
+      ;;
+    --tags)
+      [[ $# -ge 2 && -n "${2:-}" ]] || { echo "--tags requires a value" >&2; exit 1; }
+      ANSIBLE_TAGS="$2"
+      shift 2
       ;;
     -h|--help)
       usage
@@ -314,6 +321,9 @@ main() {
   fi
   # Append check flag and extra vars safely
   [[ -n "$check_flag" ]] && ANSIBLE_ARGS+=("$check_flag")
+  if [[ -n "${ANSIBLE_TAGS:-}" ]]; then
+    ANSIBLE_ARGS+=("--tags" "$ANSIBLE_TAGS")
+  fi
   # Add --ask-become-pass if any privileged operation is enabled (requires sudo)
   if [[ $INSTALL_DEPS -eq 1 || $SET_DEFAULT_SHELL -eq 1 ]]; then
     ANSIBLE_ARGS+=("--ask-become-pass")

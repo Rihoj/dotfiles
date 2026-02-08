@@ -6,7 +6,19 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
 fi
 
 # Load modular configuration files
-for f in "$HOME/.dotfiles/zsh/zshrc.d"/*.zsh(N); do
+if [[ -f "$HOME/.zshenv.local" && -z "${ZSHRC_LOCAL_ENV_LOADED:-}" ]]; then
+  export ZSHRC_LOCAL_ENV_LOADED=1
+  source "$HOME/.zshenv.local"
+fi
+this_file="${(%):-%N}"
+this_real="${this_file:A}"
+if [[ "$this_real" == */zsh/.zshrc ]]; then
+  DOTFILES_DIR="${DOTFILES_DIR:-${this_real:h:h}}"
+elif [[ -z "$DOTFILES_DIR" && -d "$HOME/.dotfiles/zsh/zshrc.d" ]]; then
+  DOTFILES_DIR="$HOME/.dotfiles"
+fi
+DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
+for f in "${DOTFILES_DIR}/zsh/zshrc.d"/*.zsh(N); do
   [[ -r "$f" ]] && source "$f"
 done
 

@@ -176,13 +176,17 @@
     - "{{ dotfiles_dir }}/zsh/zshrc.d"
     - "{{ dotfiles_dir }}/zsh/omz-custom/plugins"
     - "{{ dotfiles_dir }}/zsh/omz-custom/themes"
-  tags: config
+  tags:
+    - config
+    - zsh
 
 - name: Stat dotfiles zshrc
   ansible.builtin.stat:
     path: "{{ dotfiles_dir }}/zsh/.zshrc"
   register: repo_zshrc_stat
-  tags: config
+  tags:
+    - config
+    - zsh
 
 - name: Ensure repo .zshrc matches canonical content
   ansible.builtin.copy:
@@ -195,9 +199,18 @@
       fi
 
       # Load modular configuration files
+      if [[ -f "$HOME/.zshenv.local" && -z "${ZSHRC_LOCAL_ENV_LOADED:-}" ]]; then
+        export ZSHRC_LOCAL_ENV_LOADED=1
+        source "$HOME/.zshenv.local"
+      fi
       this_file="${(%):-%N}"
       this_real="${this_file:A}"
-      DOTFILES_DIR="${DOTFILES_DIR:-${this_real:h:h}}"
+      if [[ "$this_real" == */zsh/.zshrc ]]; then
+        DOTFILES_DIR="${DOTFILES_DIR:-${this_real:h:h}}"
+      elif [[ -z "$DOTFILES_DIR" && -d "$HOME/.dotfiles/zsh/zshrc.d" ]]; then
+        DOTFILES_DIR="$HOME/.dotfiles"
+      fi
+      DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
       for f in "${DOTFILES_DIR}/zsh/zshrc.d"/*.zsh(N); do
         [[ -r "$f" ]] && source "$f"
       done
@@ -207,20 +220,27 @@
     dest: "{{ dotfiles_dir }}/zsh/.zshrc"
     mode: "0644"
   tags: config
+  tags:
+    - config
+    - zsh
 
 - name: Stat existing .zshrc
   ansible.builtin.stat:
     path: "{{ ansible_env.HOME }}/.zshrc"
     follow: false
   register: zshrc_stat
-  tags: config
+  tags:
+    - config
+    - zsh
 
 - name: Stat for migration check
   ansible.builtin.stat:
     path: "{{ ansible_env.HOME }}/.zshrc"
     follow: false
   register: home_zshrc_to_migrate
-  tags: config
+  tags:
+    - config
+    - zsh
 
 - name: Backup existing .zshrc to backup directory (if migrating)
   ansible.builtin.copy:
@@ -232,7 +252,9 @@
     - migrate_existing_dotfiles | default(false) | bool
     - zshrc_stat.stat.exists 
     - not zshrc_stat.stat.islnk
-  tags: config
+  tags:
+    - config
+    - zsh
 
 - name: Copy home .zshrc to repo (if migrating and exists)
   ansible.builtin.copy:
@@ -244,7 +266,9 @@
     - migrate_existing_dotfiles | default(false) | bool
     - zshrc_stat.stat.exists
     - not zshrc_stat.stat.islnk
-  tags: config
+  tags:
+    - config
+    - zsh
 
 - name: Remove old .zshrc before copying repo version (if migrating)
   ansible.builtin.file:
@@ -254,13 +278,17 @@
     - migrate_existing_dotfiles | default(false) | bool
     - zshrc_stat.stat.exists 
     - not zshrc_stat.stat.islnk
-  tags: config
+  tags:
+    - config
+    - zsh
 
 - name: Check if dotfiles zshrc exists after creation
   ansible.builtin.stat:
     path: "{{ dotfiles_dir }}/zsh/.zshrc"
   register: repo_zshrc_stat_final
-  tags: config
+  tags:
+    - config
+    - zsh
 
 - name: Copy .zshrc from repo to home (unless migrating from home)
   ansible.builtin.copy:
@@ -269,14 +297,18 @@
     remote_src: true
     mode: "0644"
   when: repo_zshrc_stat_final.stat.exists and not (migrate_existing_dotfiles | default(false) | bool and home_zshrc_to_migrate.stat.exists)
-  tags: config
+  tags:
+    - config
+    - zsh
 
 # Local overrides - NEVER overwrite if exists
 - name: Stat .zshrc.local
   ansible.builtin.stat:
     path: "{{ ansible_env.HOME }}/.zshrc.local"
   register: zshrc_local_stat
-  tags: config
+  tags:
+    - config
+    - zsh
 
 - name: Create .zshrc.local from template ONLY if missing
   ansible.builtin.template:
@@ -285,7 +317,9 @@
     mode: "0644"
     force: false
   when: not zshrc_local_stat.stat.exists
-  tags: config
+  tags:
+    - config
+    - zsh
 
 - name: Document that .zshrc.local is user-owned
   ansible.builtin.debug:
@@ -293,7 +327,9 @@
       - "~/.zshrc.local exists and is NEVER modified by this playbook"
       - "This file is YOUR domain. Edit it directly for machine-specific config."
   when: zshrc_local_stat.stat.exists
-  tags: config
+  tags:
+    - config
+    - zsh
 
 # Git identity setup from bootstrap (only if provided and local config missing)
 - name: Stat .gitconfig.local
@@ -336,24 +372,49 @@
     - npm
   tags: config
 
-- name: Manage additional dotfiles (git, vim, bash, npm)
-  ansible.builtin.set_fact:
-    managed_dotfiles:
-      - { name: ".gitconfig", dir: "git", src_name: ".gitconfig" }
-      - { name: ".vimrc", dir: "vim", src_name: ".vimrc" }
-      - { name: ".bashrc", dir: "shell", src_name: ".bashrc" }
-      - { name: ".npmrc", dir: "npm", src_name: ".npmrc" }
-  tags: config
-
-- name: Process each managed dotfile
+- name: Manage .gitconfig
   ansible.builtin.include_tasks:
     file: dotfile_tasks.yml
   vars:
-    dotfile_name: "{{ item.name }}"
-    dotfile_dir: "{{ item.dir }}"
-    dotfile_src: "{{ item.src_name }}"
-  loop: "{{ managed_dotfiles }}"
-  tags: config
+    dotfile_name: ".gitconfig"
+    dotfile_dir: "git"
+    dotfile_src: ".gitconfig"
+  tags:
+    - config
+    - git
+
+- name: Manage .vimrc
+  ansible.builtin.include_tasks:
+    file: dotfile_tasks.yml
+  vars:
+    dotfile_name: ".vimrc"
+    dotfile_dir: "vim"
+    dotfile_src: ".vimrc"
+  tags:
+    - config
+    - vim
+
+- name: Manage .bashrc
+  ansible.builtin.include_tasks:
+    file: dotfile_tasks.yml
+  vars:
+    dotfile_name: ".bashrc"
+    dotfile_dir: "shell"
+    dotfile_src: ".bashrc"
+  tags:
+    - config
+    - shell
+
+- name: Manage .npmrc
+  ansible.builtin.include_tasks:
+    file: dotfile_tasks.yml
+  vars:
+    dotfile_name: ".npmrc"
+    dotfile_dir: "npm"
+    dotfile_src: ".npmrc"
+  tags:
+    - config
+    - npm
 
 # Oh My Zsh installation
 - name: Check if zsh is available

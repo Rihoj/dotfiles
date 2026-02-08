@@ -16,6 +16,15 @@ DOTFILES_DIR="${DOTFILES_DIR:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 FREQ="${ZSH_DOTFILES_UPDATE_FREQ:-1}"       # default: check every day (FREQ=0 runs every time)
 AUTOUPDATE="${ZSH_DOTFILES_AUTOUPDATE:-true}" # true to auto-update when behind
 
+# If provisioning was deferred, notify on interactive shells
+if [[ -f "$DOTFILES_DIR/.provision_required" && $- == *i* ]]; then
+  echo ""
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "⚠️  Dotfiles provisioning required"
+  cat "$DOTFILES_DIR/.provision_required"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+fi
+
 # Validate numeric inputs
 if ! [[ "$FREQ" =~ ^[0-9]+$ ]]; then
   FREQ=1
@@ -121,6 +130,9 @@ if [[ "$BEHIND" -gt 0 ]]; then
   if [[ "$AUTOUPDATE" == "true" ]]; then
     # Auto-update in background, do not block shell startup
     GIT_SSH_COMMAND="ssh -o BatchMode=yes" GIT_TERMINAL_PROMPT=0 \
+      DOTFILES_UPDATE_CONTEXT=auto \
+      DOTFILES_PROVISION_INSTALL_DEPS=false \
+      DOTFILES_PROVISION_CHSH=false \
       "$DOTFILES_DIR/bin/dotfiles-pull-updates.sh" >/dev/null 2>&1 &
   elif [[ $- == *i* ]]; then
     # Offer to run the update for the user with a short timeout

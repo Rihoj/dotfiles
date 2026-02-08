@@ -175,6 +175,27 @@ dotfiles-pull-updates.sh --no-provision
 **Preview changes**:
 ```bash
 dotfiles-pull-updates.sh --dry-run
+
+Provisioning behavior:
+By default, `dotfiles-pull-updates.sh` runs `bootstrap.sh` after pulling.
+You can control the provisioning path with these env vars:
+- `DOTFILES_PROVISION_INSTALL_DEPS` (default: `true`)
+- `DOTFILES_PROVISION_CHSH` (default: `false`)
+
+Auto-update behavior:
+When `dotfiles-check-updates.sh` runs auto-update in the background, it forces:
+- `DOTFILES_PROVISION_INSTALL_DEPS=false`
+- `DOTFILES_PROVISION_CHSH=false`
+- `DOTFILES_UPDATE_CONTEXT=auto`
+
+Update markers (skip or require provisioning):
+- Place YAML files under `updates/` to control provisioning.
+- If any marker in the pulled range has `requires_bootstrap: true`, provisioning runs.
+- If any marker has `requires_bootstrap: false` and none require `true`, provisioning is skipped.
+- If a marker has `requires_deps: true`, provisioning will install dependencies.
+- If a marker has `requires_chsh: true`, provisioning may change the default shell.
+- If a marker has `ansible_tags`, only those tags are run (supports multiple values, unioned across markers).
+- Auto-update will defer provisioning if deps/chsh are required and will write a notice to `.provision_required`.
 ```
 
 #### Process Flow
@@ -282,10 +303,17 @@ Run specific parts of the playbook:
 | Tag | Description |
 |-----|-------------|
 | `packages` | Install system packages only |
+| `fonts` | Install Nerd Fonts / refresh font cache |
 | `repo` | Clone/update repository only |
 | `omz` | Install/update Oh My Zsh only |
 | `config` | Link configuration files only |
+| `zsh` | Manage `.zshrc` and Zsh module setup |
 | `shell` | Change default shell only |
+| `bin` | Link dotfiles helper scripts to `~/.local/bin` |
+| `git` | Manage `.gitconfig` |
+| `vim` | Manage `.vimrc` |
+| `npm` | Manage `.npmrc` |
+| `shell` | Manage `.bashrc` |
 
 #### Examples
 
